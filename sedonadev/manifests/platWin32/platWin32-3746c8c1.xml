@@ -1,0 +1,36 @@
+<?xml version='1.0'?>
+<kitManifest
+   name="platWin32"
+   checksum="3746c8c1"
+   hasNatives="true"
+   doc="true"
+   isPlay="false"
+   version="0.1.0"
+   vendor="Tridium"
+   description="Platform support for Windows based devices"
+   buildHost="ubuntu"
+   buildTime="2023-05-09T15:09:26.708+08:00"
+>
+
+<!-- Dependencies -->
+<depends>
+  <depend on="sys 0.1+"/>
+</depends>
+
+<!-- platWin32::Win32PlatformService -->
+<type id="0" name="Win32PlatformService" sizeof="212" base="sys::PlatformService">
+</type>
+
+<!-- platWin32::Win32HibPlatformService -->
+<type id="1" name="Win32HibPlatformService" sizeof="212" base="platWin32::Win32PlatformService">
+</type>
+
+<!-- platWin32::Win32WdftPlatformService -->
+<type id="2" name="Win32WdftPlatformService" sizeof="212" base="platWin32::Win32PlatformService">
+</type>
+
+<!-- platWin32::Win32YieldPlatformService -->
+<type id="3" name="Win32YieldPlatformService" sizeof="212" base="platWin32::Win32PlatformService">
+</type>
+
+</kitManifest>

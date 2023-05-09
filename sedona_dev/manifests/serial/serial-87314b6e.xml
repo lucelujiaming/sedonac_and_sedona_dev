@@ -1,0 +1,20 @@
+<?xml version='1.0'?>
+<kitManifest
+   name="serial"
+   checksum="87314b6e"
+   hasNatives="true"
+   doc="true"
+   isPlay="false"
+   version="0.1.0"
+   vendor="Tridium"
+   description="Serial I/O support"
+   buildHost="ubuntu"
+   buildTime="2023-05-06T17:46:16.545+08:00"
+>
+
+<!-- Dependencies -->
+<depends>
+  <depend on="sys 0.1+"/>
+</depends>
+
+</kitManifest>

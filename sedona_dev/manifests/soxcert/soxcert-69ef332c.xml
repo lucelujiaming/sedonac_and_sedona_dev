@@ -1,0 +1,32 @@
+<?xml version='1.0'?>
+<kitManifest
+   name="soxcert"
+   checksum="69ef332c"
+   hasNatives="false"
+   doc="true"
+   isPlay="false"
+   version="0.1.0"
+   vendor="Tridium"
+   description="Kit for use in sox certification tests"
+   buildHost="ubuntu"
+   buildTime="2023-05-06T17:46:16.451+08:00"
+>
+
+<!-- Dependencies -->
+<depends>
+  <depend on="sys 0.1+"/>
+</depends>
+
+<!-- soxcert::CertComp -->
+<type id="0" name="CertComp" sizeof="40" base="sys::Component">
+  <facets>
+    <bool name="palette" val="false"/>
+  </facets>
+  <slot id="0" name="certInt" type="int" flags="c" default="0">
+    <facets>
+      <bool name="config" val="true"/>
+    </facets>
+  </slot>
+</type>
+
+</kitManifest>
