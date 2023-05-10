@@ -21,11 +21,12 @@ import fileutil
 #   defs:     list of name/value tuples
 #
 #def compile(exeFile, srcFiles, includes, libs, defs):  
-def gcc(exeFile, srcFiles, includes, libs, defs):  
+def gcc(exeFile, srcFiles, includes, libs, defs, stageDir):  
   # standard includes                                                                   
   cmd = "gcc"
   for include in includes:
-    cmd += " -I\"" + include + "\""
+    # cmd += " -I\"" + include + "\""
+    cmd += " -I" + stageDir + "/" + include + " "
     
   # defines (tuples)
   for d in defs:
@@ -35,19 +36,21 @@ def gcc(exeFile, srcFiles, includes, libs, defs):
 
   # libs     
   for lib in libs:
-    cmd += " -L\"" + lib + "\""
+    # cmd += " -L\"" + lib + "\""
+    cmd += " -L" + stageDir + "/" + lib + " "
 
   # src     
   for src in srcFiles:
     cmd += " " + src
   
   # remaining options  
-  cmd += " -O2"
+  cmd += " -O2 -lmodbus -lpthread -lm "
   cmd += " -o " + exeFile
 
   # compile away
   print cmd
   status = os.system(cmd)
+  print "ULULULUL ----------------------- Compile  os.system(" + cmd + ")"
   if status:
     raise env.BuildError("FATAL: compileunix " + exeFile)     
 

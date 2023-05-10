@@ -20,5 +20,6 @@ def compile(srcDir, args = []):
   for arg in args:
     cmd += " " + arg         
   status = os.system(cmd)
+  print "LULULU ----------------------- Compile  os.system(" + cmd + ")"
   if status:
     raise env.BuildError("FATAL: compilekit " + srcDir)   

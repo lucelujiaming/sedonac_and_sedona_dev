@@ -23,8 +23,9 @@ import xml.dom.minidom
 compiler = "gcc"
 platFile = ""
 stageDir = ""
-includes = []
-libs = []
+includes = [ ("modbus/") ]
+# libs = [ ("-lmodbus"), ("-lpthread"), ("-lm") ]
+libs = [ ("modbus/") ]
 defs = [ ("__UNIX__", "1"), ("SOCKET_FAMILY_INET", "1") ]
 
 # usage
@@ -64,8 +65,14 @@ def compile():
     stageDir = os.path.join(env.temp, re.sub("\.xml$", "", os.path.split(platFile)[1]))
     srcFiles = [ os.path.join(stageDir, "*.c") ]
     fileutil.rmdir(stageDir)
+    print "fileutil.rmdir(stageDir)"
+    print "platFile = (" + platFile + ") "
+    print "stageDir = (" + stageDir + ") "
     compilekit.compile(platFile + " -outDir " + stageDir)
-    getattr(compileunix, compiler)(env.svmExe, srcFiles, includes, libs, defs)
+    print "compilekit.compile"
+    status = os.system("mkdir -p " + stageDir + "/modbus")
+    status = os.system("cp -r source/modbus/* " + stageDir + "/modbus/")
+    getattr(compileunix, compiler)(env.svmExe, srcFiles, includes, libs, defs, stageDir)
     os.chmod(env.svmExe, 0755)
 
   except env.BuildError, err:

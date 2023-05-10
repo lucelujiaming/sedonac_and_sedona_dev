@@ -161,7 +161,7 @@ platforms/src/generic/win32/kit.xml
 /home/sedona_dev/sedonadev/temp/generic-unix/runtime.c:10:18: fatal error: list.h: No such file or directory
 执行：
 cp ./source/list.h /home/sedona_dev/sedonadev/src/vm/
-这个地方好像是写死的。必须是~/sedonadev/目录。
+这个地方是/home/sedona_dev/sedonadev/目录的原因是init.sh指定了这个目录。
 
 解决方法，注释掉makeunixdev.py中的makeunixvm.main([])部分，因为我们不需要在unix下执行svm程序。
 
