@@ -42,7 +42,7 @@ jdk1.6.0_45  jdk1.8.0_341
 export JAVA_HOME="/usr/lib/jdk/jdk1.6.0_45"
 export JRE_HOME="$JAVA_HOME/jre"
 export CLASSPATH=.:JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
-export SEDONA_HOME="/home/sedona_dev/sedona"
+export SEDONA_HOME="/home/sedona_dev/sedona_dev"
 source $SEDONA_HOME/adm/unix/init.sh
 export PATH=$JAVA_HOME/bin:$SEDONA_HOME/bin:$PATH
 注意：这里必须指定使用1.6.0_45的Java SE 6版本。
@@ -51,7 +51,7 @@ export PATH=$JAVA_HOME/bin:$SEDONA_HOME/bin:$PATH
 主要是修改jikes的路径：
 vi /home/sedona_dev/sedona/adm/unix/init.sh
 ...
-export sedona_home=~/sedonadev
+export sedona_home=~/sedona_dev
 ...
 # check to make sure that programs we need are in the path
 # for p in jikes gcc python
@@ -71,8 +71,6 @@ function scodegen
   ...
  rm -rf $sedona_home/adm/*.class
 }
-
-值得注意的是，这个文件还指定了sedona_home，这就是为什么整个编译过程发生在/home/sedona_dev/sedonadev/下，而不是在/home/sedona_dev/sedona_dev/里面，编译结果也需要从/home/sedona_dev/sedonadev/中获取的原因。
 
 6.使设置生效：
 sedona_dev@ubuntu:~$ source ~/.bashrc
@@ -97,7 +95,7 @@ makeunixvm.py   platArchive.py  props.py       source
 [2023/5/6 15:18:20] sedona_dev@ubuntu:~/sedona_dev$ ls src/sedonac
 [2023/5/6 15:18:20] build.xml  src
 
-这个目录可以自己指定，我指定为sedona_dev。
+这个目录可以自己指定，我指定为sedona_dev。默认是sedonadev目录。
 
 8.开始编译：
 编译脚本使用的是Python 2.7.3。如果使用Python3，需要手工调整所有的py脚本的语法。
@@ -157,13 +155,42 @@ platforms/src/generic/win32/kit.xml
 // define Log log
 
 10.编译vm再次报错：
-编译vm再次报错。
-/home/sedona_dev/sedonadev/temp/generic-unix/runtime.c:10:18: fatal error: list.h: No such file or directory
-执行：
-cp ./source/list.h /home/sedona_dev/sedonadev/src/vm/
-这个地方是/home/sedona_dev/sedonadev/目录的原因是init.sh指定了这个目录。
 
-解决方法，注释掉makeunixdev.py中的makeunixvm.main([])部分，因为我们不需要在unix下执行svm程序。
+解决方法一：注释掉makeunixdev.py中的makeunixvm.main([])部分，因为我们不需要在unix下执行svm程序。
+解决方法二：
+修改makeunixvm.py文件，加入modbus文件路径。
+includes = [ ("modbus/") ]
+# libs = [ ("-lmodbus"), ("-lpthread"), ("-lm") ]
+libs = [ ("modbus/") ]
+修改makeunixvm.py文件，加入modbus文件复制指令。
+...
+    fileutil.mdir(stageDir)
+    compilekit.compile(platFile + " -outDir " + stageDir)
+    status = os.system("mkdir -p " + stageDir + "/modbus")
+    status = os.system("cp -r source/modbus/* " + stageDir + "/modbus/")
+    getattr(compileunix, compiler)(env.svmExe, srcFiles, includes, libs, defs, stageDir)
+    os.chmod(env.svmExe, 0755)
+...
+修改compileunix.py文件，修改编译命令行逻辑。
+def gcc(exeFile, srcFiles, includes, libs, defs, stageDir):  
+  # standard includes                                                                   
+  cmd = "gcc"
+  for include in includes:
+    # cmd += " -I\"" + include + "\""
+    cmd += " -I" + stageDir + "/" + include + " "
+...
+
+  # libs     
+  for lib in libs:
+    # cmd += " -L\"" + lib + "\""
+    cmd += " -L" + stageDir + "/" + lib + " "
+...
+修改platforms\src\generic\unix\generic-unix.xml文件，加入对于ModBus和BacNet的支持。
+    <nativeSource path="/src/ModBus/native" />
+    <nativeSource path="/src/BacNet/native" />
+
+
+
 
 11.如果想查看编译脚本，可以修改这里：
   compilejar.py
@@ -173,98 +200,95 @@ cp ./source/list.h /home/sedona_dev/sedonadev/src/vm/
 结果如下：
 sedona_dev@ubuntu:~/sedona_dev$ python makesedona.py
 Compile [sedona.jar]
-  Javac [/home/sedona_dev/sedonadev/src/sedona/src]
+  Javac [/home/sedona_dev/sedona_dev/src/sedona/src]
 Compile Javac os.system(
-~/jikes/jikes-1.22.orig/src/jikes +E +Pno-shadow -d /home/sedona_dev/sedonadev/tempJar \
--classpath /usr/lib/jdk/jdk1.6.0_45/jre/lib/rt.jar:/home/sedona_dev/sedonadev/src/sedona/src \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/kit/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/manifest/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/platform/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/offline/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/dasp/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/sox/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/util/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/util/sedonadev/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/web/*.java \
- /home/sedona_dev/sedonadev/src/sedona/src/sedona/xml/*.java
+~/jikes/jikes-1.22.orig/src/jikes +E +Pno-shadow -d /home/sedona_dev/sedona_dev/tempJar \
+-classpath /usr/lib/jdk/jdk1.6.0_45/jre/lib/rt.jar:/home/sedona_dev/sedona_dev/src/sedona/src \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/kit/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/manifest/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/platform/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/offline/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/dasp/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/sox/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/util/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/util/sedonadev/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/web/*.java \
+ /home/sedona_dev/sedona_dev/src/sedona/src/sedona/xml/*.java
 )
 Compile Javac os.system(
 /usr/lib/jdk/jdk1.6.0_45/bin/jar \
-cf /home/sedona_dev/sedonadev/lib/sedona.jar -C /home/sedona_dev/sedonadev/tempJar .
+cf /home/sedona_dev/sedona_dev/lib/sedona.jar -C /home/sedona_dev/sedona_dev/tempJar .
 )
-  Jar [/home/sedona_dev/sedonadev/lib/sedona.jar]
+  Jar [/home/sedona_dev/sedona_dev/lib/sedona.jar]
 
 
 sedona_dev@ubuntu:~/sedona_dev$ python makesedonac.py
 Compile [sedonac.jar]
-  Javac [/home/sedona_dev/sedonadev/src/sedonac/src]
+  Javac [/home/sedona_dev/sedona_dev/src/sedonac/src]
 Compile Javac os.system(
-    ~/jikes/jikes-1.22.orig/src/jikes +E +Pno-shadow -d /home/sedona_dev/sedonadev/tempJar \
+    ~/jikes/jikes-1.22.orig/src/jikes +E +Pno-shadow -d /home/sedona_dev/sedona_dev/tempJar \
     -classpath /usr/lib/jdk/jdk1.6.0_45/jre/lib/rt.jar:\
-    /home/sedona_dev/sedonadev/src/sedonac/src:/home/sedona_dev/sedonadev/lib/sedona.jar \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/analysis/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/asm/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/ast/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/gen/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/ir/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/namespace/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/parser/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/platform/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/scode/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/steps/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/test/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/translate/*.java \
-    /home/sedona_dev/sedonadev/src/sedonac/src/sedonac/util/*.java 
+    /home/sedona_dev/sedona_dev/src/sedonac/src:/home/sedona_dev/sedona_dev/lib/sedona.jar \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/analysis/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/asm/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/ast/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/gen/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/ir/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/namespace/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/parser/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/platform/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/scode/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/steps/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/test/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/translate/*.java \
+    /home/sedona_dev/sedona_dev/src/sedonac/src/sedonac/util/*.java 
 )
 Compile Javac os.system(
-    /usr/lib/jdk/jdk1.6.0_45/bin/jar cf /home/sedona_dev/sedonadev/lib/sedonac.jar \
--C /home/sedona_dev/sedonadev/tempJar .
+    /usr/lib/jdk/jdk1.6.0_45/bin/jar cf /home/sedona_dev/sedona_dev/lib/sedonac.jar \
+-C /home/sedona_dev/sedona_dev/tempJar .
 )
-  Jar [/home/sedona_dev/sedonadev/lib/sedonac.jar]
+  Jar [/home/sedona_dev/sedona_dev/lib/sedonac.jar]
 
 12.下面查看最终的编译输出：
 sedona_dev@ubuntu:~/sedona_dev$ python makeunixdev.py 
 Compile [sedona.jar]
-  Javac [/home/sedona_dev/sedonadev/src/sedona/src]
-  Jar [/home/sedona_dev/sedonadev/lib/sedona.jar]
+  Javac [/home/sedona_dev/sedona_dev/src/sedona/src]
+  Jar [/home/sedona_dev/sedona_dev/lib/sedona.jar]
 Compile [sedonac.jar]
-  Javac [/home/sedona_dev/sedonadev/src/sedonac/src]
-  Jar [/home/sedona_dev/sedonadev/lib/sedonac.jar]
+  Javac [/home/sedona_dev/sedona_dev/src/sedonac/src]
+  Jar [/home/sedona_dev/sedona_dev/lib/sedonac.jar]
 Compile [sedonacert.jar]
-  Javac [/home/sedona_dev/sedonadev/src/sedonacert/src]
-  Jar [/home/sedona_dev/sedonadev/lib/sedonacert.jar]
+  Javac [/home/sedona_dev/sedona_dev/src/sedonacert/src]
+  Jar [/home/sedona_dev/sedona_dev/lib/sedonacert.jar]
 -------------------------------------------------------------------
-/home/sedona_dev/sedonadev
-/home/sedona_dev/sedonadev/src
+/home/sedona_dev/sedona_dev
+/home/sedona_dev/sedona_dev/src
 -------------------------------------------------------------------
-Compile [sys] Parse [50 files] WriteKit [/home/sedona_dev/sedonadev/kits/sys/sys-82791acf-0.1.0.kit] 
-WriteManifest [/home/sedona_dev/sedonadev/manifests/sys/sys-82791acf.xml] 
+Compile [sys] Parse [50 files] WriteKit [/home/sedona_dev/sedona_dev/kits/sys/sys-82791acf-0.1.0.kit] 
+WriteManifest [/home/sedona_dev/sedona_dev/manifests/sys/sys-82791acf.xml] 
 ...
 -------------------------------------------------------------------
 Compile [sys]
   Parse [50 files]
-  WriteKit [/home/sedona_dev/sedonadev/kits/sys/sys-82791acf-0.1.0.kit]
-  WriteManifest [/home/sedona_dev/sedonadev/manifests/sys/sys-82791acf.xml]
+  WriteKit [/home/sedona_dev/sedona_dev/kits/sys/sys-82791acf-0.1.0.kit]
+  WriteManifest [/home/sedona_dev/sedona_dev/manifests/sys/sys-82791acf.xml]
 ...
 
 *** Success! ***
 sedona_dev@ubuntu:~/sedona_dev$ 
-
-可以看到不知道为什么整个编译过程发生在/home/sedona_dev/sedonadev/下，而不是在/home/sedona_dev/sedona_dev/里面。
-因此上，我们所有的改动都需要在/home/sedona_dev/sedonadev/里面进行，编译结果也需要从/home/sedona_dev/sedonadev/中获取。
 
 至此编译过程完成。。
 
 
 13.下面修改代码，查看最终的编译效果：
 下面以修改Component名字长度为例，演示修改效果。
-sedona_dev@ubuntu:~/sedonadev$ grep -Rns "nameTooLong" .
+sedona_dev@ubuntu:~/sedona_dev$ grep -Rns "nameTooLong" .
 ./src/sys/Err.sedona:53:  define int nameTooLong          = 61
 ./src/sys/Component.sedona:419:    if (!in.readStr(name, 8)) return Err.nameTooLong
 ./src/sedona/src/sedona/Component.java:295:    if (name.length() > 7) return "nameTooLong";
-sedona_dev@ubuntu:~/sedonadev$ 
+sedona_dev@ubuntu:~/sedona_dev$ 
 
 这个时候执行sedonac.exe显示如下错误：
 D:\SeconaDownload>C:\Sedona\SedonaWorkbench-1.2.28\sedona\bin\sedonac.exe  app.sax
@@ -274,16 +298,16 @@ app.sax:133: Invalid name "BB77BB77BB77BB77BB77" (nameTooLong)
 
 D:\SeconaDownload>
 下面修改代码：
-sedona_dev@ubuntu:~/sedonadev$ vi ./src/sedona/src/sedona/Component.java 
-sedona_dev@ubuntu:~/sedonadev$ grep -Rns "nameTooLong" .
+sedona_dev@ubuntu:~/sedona_dev$ vi ./src/sedona/src/sedona/Component.java 
+sedona_dev@ubuntu:~/sedona_dev$ grep -Rns "nameTooLong" .
 ./src/sys/Err.sedona:53:  define int nameTooLong          = 61
 ./src/sys/Component.sedona:419:    if (!in.readStr(name, 8)) return Err.nameTooLong
 ./src/sedona/src/sedona/Component.java:295:    if (name.length() > 15) return "nameTooLong with 15";
-sedona_dev@ubuntu:~/sedonadev$ 
+sedona_dev@ubuntu:~/sedona_dev$ 
 可以看到我们把Component名字长度改成了15。并且修改了提示信息。
 之后把生成的jar包复制到Windows电脑中：
-sedona_dev@ubuntu:~/sedonadev$ cp -r ../sedonadev /mnt/hgfs/Sedona/lujiaming_exchange/
-sedona_dev@ubuntu:~/sedonadev$ 
+sedona_dev@ubuntu:~/sedona_dev$ cp -r ../sedona_dev /mnt/hgfs/Sedona/lujiaming_exchange/
+sedona_dev@ubuntu:~/sedona_dev$ 
 
 把编译出来的jar包复制到电脑的C:\Sedona\SedonaWorkbench-1.2.28\sedona\lib目录中。
 再次执行sedonac.exe显示如下错误：
@@ -303,4 +327,7 @@ D:\SeconaDownload>C:\Sedona\SedonaWorkbench-1.2.28\sedona\bin\sedonac.exe  app.s
 可以看到生成成功。
 
 D:\SeconaDownload>
+
+
+
 
