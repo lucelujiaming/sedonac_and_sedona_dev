@@ -13,7 +13,7 @@
 # "sedonadev" that points to the repository you want to be working with.
 # You can always change this to be the explicit path.This
 
-export sedona_home=~/sedonadev
+export sedona_home=~/sedona_dev
 
 # path
 export PATH=$PATH:$sedona_home/bin:$sedona_home/adm:$sedona_home/adm/unix
