@@ -49,7 +49,7 @@ export PATH=$JAVA_HOME/bin:$SEDONA_HOME/bin:$PATH
 
 5.修改init.sh脚本：
 主要是修改jikes的路径：
-vi /home/sedona_dev/sedona/adm/unix/init.sh
+vi /home/sedona_dev/sedona_dev/adm/unix/init.sh
 ...
 export sedona_home=~/sedona_dev
 ...
@@ -171,7 +171,7 @@ libs = [ ("modbus/") ]
     getattr(compileunix, compiler)(env.svmExe, srcFiles, includes, libs, defs, stageDir)
     os.chmod(env.svmExe, 0755)
 ...
-修改compileunix.py文件，修改编译命令行逻辑。
+修改compileunix.py文件，修改编译命令行的-I逻辑。去除引号。
 def gcc(exeFile, srcFiles, includes, libs, defs, stageDir):  
   # standard includes                                                                   
   cmd = "gcc"
@@ -179,18 +179,22 @@ def gcc(exeFile, srcFiles, includes, libs, defs, stageDir):
     # cmd += " -I\"" + include + "\""
     cmd += " -I" + stageDir + "/" + include + " "
 ...
-
+修改编译命令行的-L逻辑。去除引号。
   # libs     
   for lib in libs:
     # cmd += " -L\"" + lib + "\""
     cmd += " -L" + stageDir + "/" + lib + " "
+  # src     
+  for src in srcFiles:
+    cmd += " " + src
+加入modbus，pthread的支持。
+  # remaining options  
+  cmd += " -O2 -lmodbus -lpthread -lm "
+  cmd += " -o " + exeFile
 ...
 修改platforms\src\generic\unix\generic-unix.xml文件，加入对于ModBus和BacNet的支持。
     <nativeSource path="/src/ModBus/native" />
     <nativeSource path="/src/BacNet/native" />
-
-
-
 
 11.如果想查看编译脚本，可以修改这里：
   compilejar.py
