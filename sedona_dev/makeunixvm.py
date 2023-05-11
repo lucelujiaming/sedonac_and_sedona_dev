@@ -72,6 +72,8 @@ def compile():
     print "compilekit.compile"
     status = os.system("mkdir -p " + stageDir + "/modbus")
     status = os.system("cp -r source/modbus/* " + stageDir + "/modbus/")
+    status = os.system("cp -r source/nativetable.c " + stageDir + "/")
+    status = os.system("cp -r source/pid_pos.c " + stageDir + "/")
     getattr(compileunix, compiler)(env.svmExe, srcFiles, includes, libs, defs, stageDir)
     os.chmod(env.svmExe, 0755)
 
