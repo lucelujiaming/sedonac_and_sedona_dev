@@ -9,7 +9,7 @@
    vendor="Tridium"
    description="Platform support for Windows based devices"
    buildHost="ubuntu"
-   buildTime="2023-05-06T17:46:17.365+08:00"
+   buildTime="2023-05-10T16:53:04.375+08:00"
 >
 
 <!-- Dependencies -->

@@ -9,7 +9,7 @@
    vendor="XunGaoAuto"
    description="Sox service for remote management"
    buildHost="ubuntu"
-   buildTime="2023-05-06T17:46:16.332+08:00"
+   buildTime="2023-05-10T16:53:03.304+08:00"
 >
 
 <!-- Dependencies -->
