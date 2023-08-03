@@ -42,10 +42,11 @@ def compile(exeFile, srcFiles, includes, libs, defs, opts=[]):
     os.makedirs(os.path.dirname(exeFile))
                                                                   
   # standard includes                                                                   
-  cmd = "cl"
+  cmd = "cl /W0 "
   cmd += " /I\"" + os.path.join(vcInstallDir, "Include") + "\""
   cmd += " /I\"" + os.path.join(winSdk, "Include") + "\""
   cmd += " /I\"source\""
+  cmd += " /I\"libmodbus\""
   for include in includes:
     cmd += " /I\"" + include + "\""
     
@@ -60,6 +61,9 @@ def compile(exeFile, srcFiles, includes, libs, defs, opts=[]):
   
   cmd += " \"" + os.path.join(vcInstallDir, "Lib", "libcmt.lib") + "\""
   cmd += " \"" + os.path.join(vcInstallDir, "Lib", "OLDNAMES.lib") + "\""
+  
+  cmd += " \"libmodbus\libmodbus_Win32.lib\""
+  
   # libs     
   for src in srcFiles:
     cmd += " " + src

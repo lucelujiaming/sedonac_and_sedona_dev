@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
+#include <windows.h> 
 
 #include "list.h"
 
@@ -47,20 +48,6 @@ typedef struct {
 // | 33?           | 4              |
 
 static T_PERSIST ctx;
-
-struct timeval
-{
-    long tv_sec;     // 秒
-    long tv_usec;    // 微秒
-};
-
-unsigned long long get_tick_ms(void)
-{
-    unsigned long long ret = 0;
-
-
-    return ret;
-}
 
 static unsigned int get_persist_size(void)
 {

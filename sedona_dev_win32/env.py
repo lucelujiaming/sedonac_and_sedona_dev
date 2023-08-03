@@ -34,6 +34,8 @@ bin          = os.path.join(home, "bin")
 doc          = os.path.join(home, "doc")
 kits         = os.path.join(home, "kits")
 lib          = os.path.join(home, "lib")
+# lujiaming Add at 05/06/23
+temp         = os.path.join(home, "temp")
 manifests    = os.path.join(home, "manifests")
 platforms    = os.path.join(home, "platforms")
 scode        = os.path.join(home, "scode")
@@ -47,7 +49,6 @@ sedonaJar    = os.path.join(lib, "sedona.jar")
 sedonacJar   = os.path.join(lib, "sedonac.jar")
 sedonacertJar= os.path.join(lib, "sedonacert.jar")
 jikes        = os.path.join(adm, "jikes.exe")
-temp         = os.path.join(home, "temp")
 
 # Build Environment
 buildHome   = "d:\\sedona\\build"

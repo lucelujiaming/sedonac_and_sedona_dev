@@ -38,6 +38,7 @@ def compile(srcDir, depends, packages, jarFile, func=None):
   for package in packages:
     cmd += " " + os.path.join(srcDir, package.replace(".", os.path.sep), "*.java")    
   status = os.system(cmd)
+  print "Compile Javac os.system(" + cmd + ")"
   if status:
     raise env.BuildError("FATAL: makejar " + jarFile)
     
@@ -49,6 +50,7 @@ def compile(srcDir, depends, packages, jarFile, func=None):
   # jar up using jar.exe
   cmd = env.jar + " cf " + jarFile + " -C " + temp + " ."
   status = os.system(cmd)
+  print "Compile Javac os.system(" + cmd + ")"
   if status:
     raise env.BuildError("FATAL: makejar " + jarFile)  
   

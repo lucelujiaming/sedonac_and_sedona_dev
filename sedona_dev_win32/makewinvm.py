@@ -34,7 +34,7 @@ libs = [ "ws2_32.lib",  "uuid.lib", "kernel32.lib"]
 #
 # Dictionary of compiler args - may be modified by cmd line
 #
-defs = { 'WIN32':None, '_WIN32':None, 'SOCKET_FAMILY_INET':None,
+defs = { 'WIN32':None, '_WIN32':None, 'SOCKET_FAMILY_INET':None, 'WIN32_LEAN_AND_MEAN':None,
          'PLAT_BUILD_VERSION':'\\"' + env.buildVersion() + '\\"' }
 
 

@@ -23,6 +23,7 @@
     <nativeSource path="/src/datetimeStd/native/std" />
     <nativeSource path="/platforms/src/generic/win32/native" />
 
+    <nativeSource path="/src/ModBus/native" />
   </compile>
   
   <manifestInclude>
