@@ -17,8 +17,10 @@ import env
 if __name__ == '__main__': 
   cmd = '"' + os.path.join(env.javaBin, "java") + '"'
   cmd = cmd + " -Dsedona.home=" 
-  cmd = cmd + str(env.envHome)
+  cmd = cmd + str("")
   cmd += " -cp " + env.sedonaJar
   cmd += " sedona.platform.PlatformDb "
   cmd += " ".join(sys.argv[1:])
+  
+  print("platformdb::cmd = " + cmd)
   subprocess.call(cmd, shell=True)
