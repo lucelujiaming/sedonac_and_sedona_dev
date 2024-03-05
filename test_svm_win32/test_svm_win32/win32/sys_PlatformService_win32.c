@@ -61,6 +61,6 @@ int64_t sys_PlatformService_getNativeMemAvailable(SedonaVM* vm, Cell* params)
 
 void sys_PlatformService_doReboot(SedonaVM* vm, Cell* params)
 {
-    ;
+	exit(0);
 }
 
