@@ -428,64 +428,64 @@ NativeMethod kitNatives2[] =
 ////////////////////////////////////////////////////////////////
 
 // int rtuMaster.dO(int, int, int, int, int, int, int)
-Cell ModBus_rtuMaster_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuMaster_dO(SedonaVM* vm, Cell* params);
 
 // int rtuMaster.dC(int)
-Cell ModBus_rtuMaster_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuMaster_dC(SedonaVM* vm, Cell* params);
 
 // int rtuMaster.dA(int, int, int, int, int, int)
-Cell ModBus_rtuMaster_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuMaster_dA(SedonaVM* vm, Cell* params);
 
 // int rtuMaster.dR(int, int, int, int, float[])
-Cell ModBus_rtuMaster_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuMaster_dR(SedonaVM* vm, Cell* params);
 
 // int rtuMaster.dW(int, int, int, int, float[])
-Cell ModBus_rtuMaster_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuMaster_dW(SedonaVM* vm, Cell* params);
 
 // int rtuSlave.dO(int, int, int, int, int)
-Cell ModBus_rtuSlave_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuSlave_dO(SedonaVM* vm, Cell* params);
 
 // int rtuSlave.dC(int)
-Cell ModBus_rtuSlave_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuSlave_dC(SedonaVM* vm, Cell* params);
 
 // int rtuSlave.dA(int, int, int, int)
-Cell ModBus_rtuSlave_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuSlave_dA(SedonaVM* vm, Cell* params);
 
 // int rtuSlave.dR(int, int, int, int, float[])
-Cell ModBus_rtuSlave_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuSlave_dR(SedonaVM* vm, Cell* params);
 
 // int rtuSlave.dW(int, int, int, int, float[])
-Cell ModBus_rtuSlave_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_rtuSlave_dW(SedonaVM* vm, Cell* params);
 
 // int tcpClient.dO(sys::Str, int)
-Cell ModBus_tcpClient_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpClient_dO(SedonaVM* vm, Cell* params);
 
 // int tcpClient.dC(int)
-Cell ModBus_tcpClient_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpClient_dC(SedonaVM* vm, Cell* params);
 
 // int tcpClient.dA(int, int, int, int, int)
-Cell ModBus_tcpClient_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpClient_dA(SedonaVM* vm, Cell* params);
 
 // int tcpClient.dR(int, int, int, int, float[])
-Cell ModBus_tcpClient_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpClient_dR(SedonaVM* vm, Cell* params);
 
 // int tcpClient.dW(int, int, int, int, float[])
-Cell ModBus_tcpClient_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpClient_dW(SedonaVM* vm, Cell* params);
 
 // int tcpServer.dO(int)
-Cell ModBus_tcpServer_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpServer_dO(SedonaVM* vm, Cell* params);
 
 // int tcpServer.dC(int)
-Cell ModBus_tcpServer_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpServer_dC(SedonaVM* vm, Cell* params);
 
 // int tcpServer.dA(int, int, int, int)
-Cell ModBus_tcpServer_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpServer_dA(SedonaVM* vm, Cell* params);
 
 // int tcpServer.dR(int, int, int, int, float[])
-Cell ModBus_tcpServer_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpServer_dR(SedonaVM* vm, Cell* params);
 
 // int tcpServer.dW(int, int, int, int, float[])
-Cell ModBus_tcpServer_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell ModBus_tcpServer_dW(SedonaVM* vm, Cell* params);
 
 // native table for kit 3
 NativeMethod kitNatives3[] = 
@@ -517,58 +517,58 @@ NativeMethod kitNatives3[] =
 ////////////////////////////////////////////////////////////////
 
 // int BIP.dO(int, int, int)
-Cell BacNet_BIP_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dO(SedonaVM* vm, Cell* params);
 
 // int BIP.dC(int)
-Cell BacNet_BIP_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dC(SedonaVM* vm, Cell* params);
 
 // int BIP.dA(int, int, int, int, int, int)
-Cell BacNet_BIP_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dA(SedonaVM* vm, Cell* params);
 
 // int BIP.dR(int, int, int, int, float[])
-Cell BacNet_BIP_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dR(SedonaVM* vm, Cell* params);
 
 // int BIP.dW(int, int, int, int, float[])
-Cell BacNet_BIP_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dW(SedonaVM* vm, Cell* params);
 
 // int MSTP.dO(int, int, int, int, int)
-Cell BacNet_MSTP_dO(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dO(SedonaVM* vm, Cell* params);
 
 // int MSTP.dC(int)
-Cell BacNet_MSTP_dC(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dC(SedonaVM* vm, Cell* params);
 
 // int MSTP.dA(int, int, int, int, int, int)
-Cell BacNet_MSTP_dA(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dA(SedonaVM* vm, Cell* params);
 
 // int MSTP.dR(int, int, int, int, float[])
-Cell BacNet_MSTP_dR(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dR(SedonaVM* vm, Cell* params);
 
 // int MSTP.dW(int, int, int, int, float[])
-Cell BacNet_MSTP_dW(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dW(SedonaVM* vm, Cell* params);
 
 // int BIP.dS(int, byte[], int[], float[])
-Cell BacNet_BIP_dS(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dS(SedonaVM* vm, Cell* params);
 
 // int BIP.dT(int, int, int[], float[])
-Cell BacNet_BIP_dT(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dT(SedonaVM* vm, Cell* params);
 
 // int MSTP.dS(int, byte[], int[], float[])
-Cell BacNet_MSTP_dS(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dS(SedonaVM* vm, Cell* params);
 
 // int MSTP.dT(int, int, int[], float[])
-Cell BacNet_MSTP_dT(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_MSTP_dT(SedonaVM* vm, Cell* params);
 
 // int BIP.dD(int, byte[], int[], float[])
-Cell BacNet_BIP_dD(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dD(SedonaVM* vm, Cell* params);
 
 // int BIP.dF(int, int, int[], float[])
-Cell BacNet_BIP_dF(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_dF(SedonaVM* vm, Cell* params);
 
 // int BIP.dD(int, byte[], int[], float[])
-Cell BacNet_BIP_eD(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_eD(SedonaVM* vm, Cell* params);
 
 // int BIP.dF(int, int, int[], float[])
-Cell BacNet_BIP_eF(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell BacNet_BIP_eF(SedonaVM* vm, Cell* params);
 
 // native table for kit 4
 NativeMethod kitNatives4[] = 
@@ -598,13 +598,13 @@ NativeMethod kitNatives4[] =
 ////////////////////////////////////////////////////////////////
 
 // int Pid.a()
-Cell PID_Pid_a(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell PID_Pid_a(SedonaVM* vm, Cell* params);
 
 // float Pid.f(int, float, float, float, float, float, float, float, float)
-Cell PID_Pid_f(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell PID_Pid_f(SedonaVM* vm, Cell* params);
 
 // int Pid.d(int)
-Cell PID_Pid_d(SedonaVM* vm, Cell* params) {   return nullCell; }
+Cell PID_Pid_d(SedonaVM* vm, Cell* params);
 
 // native table for kit 10
 NativeMethod kitNatives10[] = 

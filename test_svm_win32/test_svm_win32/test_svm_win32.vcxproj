@@ -78,6 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="win32\bacnet.c" />
     <ClCompile Include="win32\datetimeStd_DateTimeServiceStd.c" />
     <ClCompile Include="win32\inet_Crypto_sha1.c" />
     <ClCompile Include="win32\inet_sha1.c" />
@@ -86,7 +87,9 @@
     <ClCompile Include="win32\inet_UdpSocket_std.c" />
     <ClCompile Include="win32\inet_util_std.c" />
     <ClCompile Include="win32\main.c" />
+    <ClCompile Include="win32\modbus.c" />
     <ClCompile Include="win32\nativetable.c" />
+    <ClCompile Include="win32\pid_pos.c" />
     <ClCompile Include="win32\platformManifest.c" />
     <ClCompile Include="win32\platWin32_Win32PlatformService_win32.c" />
     <ClCompile Include="win32\runtime.c" />
