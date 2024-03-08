@@ -140,11 +140,16 @@ Cell inet_UdpSocket_open(SedonaVM* vm, Cell* params)
   // windoze startup
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
+  {
     return falseCell;
+  }
 #endif
 
   // check for already initialized
-  if (!closed || sock != -1) return falseCell;
+  if (!closed || sock != -1) 
+  {
+     return falseCell;
+  }
 
   // create socket
 #ifdef SOCKET_FAMILY_INET
@@ -154,20 +159,32 @@ Cell inet_UdpSocket_open(SedonaVM* vm, Cell* params)
 #endif
 
 #ifdef _WIN32
-  if (sock == INVALID_SOCKET) return falseCell;
+  if (sock == INVALID_SOCKET) 
+  {
+    return falseCell;
+  }
 #else
-  if (sock < 0) return falseCell;
+  if (sock < 0) 
+  {
+    return falseCell;
+  }
 #endif
+  
+  int so_broadcast=1;
+  setsockopt(sock, SOL_SOCKET, SO_BROADCAST, 
+      (char *)&so_broadcast, sizeof(so_broadcast));
 
   // make socket non-blocking
   if (inet_setNonBlocking(sock) != 0)
   {
+    printf("inet_UdpSocket_open::closesocket with %d.\r\n", sock);
     closesocket(sock);
     return falseCell;
   }
 
   // udate UdpSocket instance
   setClosed(self, 0);
+  printf("inet_UdpSocket_open::setSocket with %d.\r\n", sock);
   setSocket(self, sock);
 
   return trueCell;
@@ -397,9 +414,11 @@ Cell inet_UdpSocket_close(SedonaVM* vm, Cell* params)
   void* self    = params[0].aval;
   socket_t sock = getSocket(self);
   bool closed   = getClosed(self);
-
+  
+  printf("inet_UdpSocket_close::sock with %d.\r\n", sock);
   if (!closed)
   {
+    printf("inet_UdpSocket_close::closesocket with %d.\r\n", sock);
     closesocket(sock);
     setClosed(self, 1);
     setSocket(self, -1);
@@ -408,108 +427,22 @@ Cell inet_UdpSocket_close(SedonaVM* vm, Cell* params)
 }
 
 // Bacbet device list searching
-#define PORT 47808
+// #define PORT 47808
 #define MAXDATASIZE 256
 
+
+#define SEND_WHOIS_PACKET                     1
+#define SEND_WHOIS_ROUTER_To_NETWORK_PACKET   2
+
+// 0000 C0 A8 A8 EB BA C0 81 0A 00 07 01 80 00
+#define WHOIS_ROUTER_To_NETWORK_PACKET "\x81\x0a\x00\x07\x01\x80\x00"
+#define WHOIS_ROUTER_To_NETWORK_LENGTH 7
+
+
+// 0000 C0 A8 A8 02 BA C0 81 0A 00 0C 01 20 FF FF 00 FF 
+// 0010 10 08
 #define WHOIS_PACKET "\x81\x0a\x00\x0c\x01\x20\xff\xff\x00\xff\x10\x08"
 #define WHOIS_LENGTH 12
-
-#pragma pack(1)
-// BACnet Virtual Link Control
-typedef struct bacnet_head_t {
-	unsigned char type;
-	unsigned char function;
-	unsigned short bvlcLength;
-} bacnet_head;
-
-typedef struct bacnet_NPDU_DstSpec_t {
-	unsigned char  version;
-	unsigned char  control;
-	unsigned short dstAddr;
-	unsigned char  dstAddrLen;
-	unsigned char  hopCount;
-} bacnet_NPDU_DstSpec;
-
-typedef struct bacnet_NPDU_SrcSpec_t {
-	unsigned char  version;
-	unsigned char  control;
-	unsigned short dstAddr;
-	unsigned char  dstAddrLen;
-	unsigned short srcAddr;
-	unsigned char  srcAddrLen;
-	unsigned char  sadr;
-	unsigned char  hopCount;
-} bacnet_NPDU_SrcSpec;
-
-typedef struct bacnet_APDU_t {
-	unsigned char  apnuType;
-	unsigned char  serviceChoice;
-	unsigned char  objectIdentifierLen;
-	unsigned int   objectIdentifierAndType;
-	unsigned char  apnuLenLen;
-	unsigned short apnuLen;
-	unsigned short segment;
-	unsigned char  vendorIDLen;
-	unsigned short vendorID;
-} bacnet_APDU;
-
-typedef struct bacnet_iam_dstSpec_t {
-	bacnet_head         headObject;
-	bacnet_NPDU_DstSpec npduDstObject;
-	bacnet_APDU         apnuObject;
-} bacnet_iam_dstSpec;
-
-typedef struct bacnet_iam_srcSpec_t {
-	bacnet_head         headObject;
-	bacnet_NPDU_SrcSpec npduSrcObject;
-	bacnet_APDU         apnuObject;
-} bacnet_iam_srcSpec;
-#pragma pack()
-
-socket_t initializeSocket(char * networkIP, 
-					struct sockaddr_in* my_addr, 
-					struct sockaddr_in* user_addr)
-{
-	socket_t clientSocket;
-	
-	int so_broadcast=1;
-#ifdef _WIN32
-	WSADATA wsadata;
-	if (0 == WSAStartup(MAKEWORD(2, 2), &wsadata))
-	{
-		printf("Socket opened r\n");
-	}
-	else
-	{
-		printf("Socket open failed \r\n");
-		return -1;
-	}
-#endif
-	clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-	my_addr->sin_family=AF_INET;
-	my_addr->sin_port=htons(PORT);
-	my_addr->sin_addr.s_addr=inet_addr("255.255.255.255");
-	memset(&(my_addr->sin_zero), 0x00, 8);
-
-	setsockopt(clientSocket, SOL_SOCKET, SO_BROADCAST, 
-		(char *)&so_broadcast, sizeof(so_broadcast));
-
-	inet_setNonBlocking(clientSocket);
-	
-	user_addr->sin_family=AF_INET;
-	user_addr->sin_port=htons(PORT);
-	// user_addr.sin_addr.s_addr=htonl(INADDR_ANY);
-	user_addr->sin_addr.s_addr=inet_addr(networkIP);
-	memset(&(user_addr->sin_zero), 0x00, 8);
-	
-	if((bind(clientSocket, (struct sockaddr *)user_addr,
-									sizeof(struct sockaddr)))==-1)
-	{
-		return -1;
-	}
-	return clientSocket;
-}
 
 #ifdef _WIN32
 void revertShort(unsigned short *sValue)
@@ -526,191 +459,730 @@ void revertInt(unsigned int *uValue)
 	unsigned char * ptrValue = (unsigned char *)(uValue);
 	unsigned char cTmp;
 
-	cTmp = ptrValue[0];
-	ptrValue[0] = ptrValue[3];
-	ptrValue[3] = cTmp;
-	
-	cTmp = ptrValue[1];
-	ptrValue[1] = ptrValue[2];
-	ptrValue[2] = cTmp;
+    cTmp = ptrValue[0];
+    ptrValue[0] = ptrValue[3];
+    ptrValue[3] = cTmp;
+
+    cTmp = ptrValue[1];
+    ptrValue[1] = ptrValue[2];
+    ptrValue[2] = cTmp;
 }
 #endif
 
-void copyBacnetIamDstSpec(bacnet_iam_dstSpec * objIAMDstPtr, unsigned char * buffer, int iLen)
+
+unsigned int convertIntFromBuffer(unsigned char * buffer)
 {
-	memcpy(objIAMDstPtr, buffer, iLen);
-#ifdef _WIN32
-	revertShort(&(objIAMDstPtr->headObject.bvlcLength));
-	revertShort(&(objIAMDstPtr->npduDstObject.dstAddr));
-	revertInt(&(objIAMDstPtr->apnuObject.objectIdentifierAndType));
-	revertShort(&(objIAMDstPtr->apnuObject.apnuLen));
-	revertShort(&(objIAMDstPtr->apnuObject.segment));
-	revertShort(&(objIAMDstPtr->apnuObject.vendorID));
-#endif
+    unsigned int uRet = 0x00;
+    uRet = buffer[0];
+    uRet = uRet * 0x100 + buffer[1];
+    uRet = uRet * 0x100 + buffer[2];
+    uRet = uRet * 0x100 + buffer[3];
+    return uRet;
+}
+
+unsigned short convertShortFromBuffer(unsigned char * buffer)
+{
+    unsigned short uRet = 0x00;
+    uRet = buffer[0];
+    uRet = uRet * 0x100 + buffer[1];
+    return uRet;
 }
 
 
-void copyBacnetIamSrcSpec(bacnet_iam_srcSpec * objIAMSrcPtr, unsigned char * buffer, int iLen)
+#define SERVICE_CHOICE_IAM    0x00
+int dealWhoIsResponse(struct sockaddr_in user_addr, unsigned char * buffer, int iLen, 
+                 unsigned int  * ipArrayList, 
+                 unsigned int  * controlDstSpecList, 
+                 unsigned int  * NPDUList, 
+                 unsigned int  * objectIdentifierList, 
+                 unsigned int  * maxADPUList,
+                 unsigned int  iListIdx)
 {
-	memcpy(objIAMSrcPtr, buffer, iLen);
-#ifdef _WIN32
-	revertShort(&(objIAMSrcPtr->headObject.bvlcLength));
-	revertShort(&(objIAMSrcPtr->npduSrcObject.dstAddr));
-	revertShort(&(objIAMSrcPtr->npduSrcObject.srcAddr));
-	revertInt(&(objIAMSrcPtr->apnuObject.objectIdentifierAndType));
-	revertShort(&(objIAMSrcPtr->apnuObject.apnuLen));
-	revertShort(&(objIAMSrcPtr->apnuObject.segment));
-	revertShort(&(objIAMSrcPtr->apnuObject.vendorID));
-#endif
-}
-
-int dealResponse(struct sockaddr_in user_addr, unsigned char * buffer, int iLen, 
-				 unsigned int * ipArrayList, unsigned int * objIDList, unsigned int iListLen)
-{
-	unsigned char control;
-	bacnet_iam_dstSpec objIAMDst ;
-	bacnet_iam_srcSpec objIAMSrc ;
-	printf("IP = %s. we Receive %d .\r\n", inet_ntoa(user_addr.sin_addr), iLen);
-	if(iLen == sizeof(objIAMDst))
-	{
-		copyBacnetIamDstSpec(&objIAMDst, buffer, iLen);
-		control = objIAMDst.npduDstObject.control;
-		printf("Receive bacnet_iam_dstSpec(%02X) with %d \r\n", control, iLen);
-		printf("objectIdentifierType = %d \r\n", 
-			objIAMDst.apnuObject.objectIdentifierAndType >> 22);
-		printf("objectIdentifier = %d \r\n", 
-			objIAMDst.apnuObject.objectIdentifierAndType & 0x3FFFFF);
-		
-	}
-	else if(iLen == sizeof(objIAMSrc))
-	{
-		copyBacnetIamSrcSpec(&objIAMSrc, buffer, iLen);
-		control = objIAMSrc.npduSrcObject.control;
-		printf("Receive bacnet_iam_srcSpec(%02X) with %d \r\n", control, iLen);
-		printf("Source Network Address: %d \r\n", objIAMSrc.npduSrcObject.srcAddr);
-		printf("objectIdentifierType: %d \r\n", 
-			objIAMSrc.apnuObject.objectIdentifierAndType >> 22);
-		printf("objectIdentifier: %d \r\n", 
-			objIAMSrc.apnuObject.objectIdentifierAndType & 0x3FFFFF);
-
-		memcpy(&(ipArrayList[iListLen]), &(user_addr.sin_addr), sizeof(int));
-		objIDList[iListLen] = objIAMSrc.apnuObject.objectIdentifierAndType & 0x3FFFFF;
-		iListLen++;
-	}
-	
-	return iListLen;
+    int iOffset = 0;
+    printf("IP = %s. we Receive %d .\r\n", inet_ntoa(user_addr.sin_addr), iLen);
+    ipArrayList[iListIdx] = (unsigned int)(user_addr.sin_addr.s_addr);
+    printf("Type: %X. Function: %X. BVLC-Length: %X. ", 
+        buffer[0], buffer[1], (int)convertShortFromBuffer(buffer + 2));
+    printf("Version: %X. Control: %X.\r\n", buffer[4], buffer[5]);
+    controlDstSpecList[iListIdx] = buffer[5];
+    
+    int macAddressLength = buffer[8];
+    // Source specifier: SNET, SLEN and SADR absent
+    if((buffer[5] & 0x08) == 0x00)   // 0x20
+    {
+        // Destination MAC Layer Address Length
+        iOffset = 10 + macAddressLength;
+        printf("Unconfirmed Service Choice: %X. ", buffer[iOffset + 1]);
+        if(buffer[iOffset + 1] == SERVICE_CHOICE_IAM)
+        {
+            NPDUList[iListIdx] = 0x00;
+            iOffset += 2;
+            int objectIdentifierLen = buffer[iOffset] % 0x10;
+            if(objectIdentifierLen == 0x04)
+            {
+                iOffset++;
+                unsigned int objectIdentifier = convertIntFromBuffer(buffer + iOffset);
+                objectIdentifierList[iListIdx] = objectIdentifier;
+                printf("Object Type: %X. Instance Number: %X. ", objectIdentifier >> 22, 
+                    objectIdentifier & 0x3FFFFF);
+                iOffset += objectIdentifierLen;
+                int maxADPULength = buffer[iOffset] % 0x08;
+                iOffset++;
+                if(maxADPULength == 0x02)
+                {
+                    int maxADPU = convertShortFromBuffer(buffer + iOffset);
+                    printf("maxADPU: %d.\r\n", maxADPU);
+                    maxADPUList[iListIdx] = maxADPU;
+                }
+                else
+                {
+                    printf("Error maxADPU with 0x%X.\r\n", objectIdentifierLen);
+                    maxADPUList[iListIdx] = -1;
+                    return 0;
+                }
+            }
+            else
+            {
+                printf("Error objectIdentifierLen with 0x%X.\r\n", objectIdentifierLen);
+                objectIdentifierList[iListIdx] = -1;
+                return 0;
+            }
+        }
+        else
+        {
+            printf("Error SERVICE_CHOICE with 0x%X.\r\n", buffer[iOffset + 1]);
+            return 0;
+        }
+    }
+    // Source specifier: SNET, SLEN and SADR present, 
+    //                   SLEN=0 invalid, SLEN specifies length of SADR
+    if((buffer[5] & 0x08) == 0x08)   // 0x28
+    {
+        iOffset = 9;
+        int sourceNetworkAddress = convertShortFromBuffer(buffer + iOffset);
+        iOffset += 2;
+        printf("sourceNetworkAddress: %d. sourceMACLayerAddressLength: %d. ",
+            sourceNetworkAddress, buffer[iOffset]);
+        if(buffer[iOffset] == 0x01)
+        {
+            iOffset++;
+            int sadr = buffer[iOffset];
+            printf("SADR: %d. ", sadr);
+            NPDUList[iListIdx] = sadr * 0x10000 + sourceNetworkAddress;
+            iOffset++;
+            printf("Hop Count: %d.\r\n", buffer[iOffset]);
+        }
+        else
+        {
+            printf("Error ourceMACLayerAddressLength with 0x%X.\r\n", buffer[iOffset]);
+            NPDUList[iListIdx] = -1;
+            return 0;
+        }
+        iOffset += 2;
+        printf("Unconfirmed Service Choice: %X. ", buffer[iOffset]);
+        if(buffer[iOffset] == SERVICE_CHOICE_IAM)
+        {
+            iOffset++;
+            int objectIdentifierLen = buffer[iOffset] % 0x10;  
+            if(objectIdentifierLen == 0x04)
+            {
+                iOffset++;
+                unsigned int objectIdentifier = convertIntFromBuffer(buffer + iOffset);
+                objectIdentifierList[iListIdx] = objectIdentifier;
+                printf("Object Type: %X. Instance Number: %X. ", objectIdentifier >> 22, 
+                    objectIdentifier & 0x3FFFFF);
+                iOffset += objectIdentifierLen;
+                int maxADPULength = buffer[iOffset] % 0x08;
+                iOffset++;  
+                if(maxADPULength == 0x02)
+                {
+                    int maxADPU = convertShortFromBuffer(buffer + iOffset);
+                    maxADPUList[iListIdx] = maxADPU;
+                    printf("maxADPU: %d.\r\n", maxADPU);
+                }
+                else
+                {
+                    printf("Error maxADPU with 0x%X.\r\n", objectIdentifierLen);
+                    maxADPUList[iListIdx] = -1;
+                    return 0;
+                } 
+            }
+            else
+            {
+                printf("Error objectIdentifierLen with 0x%X.\r\n", objectIdentifierLen);
+                objectIdentifierList[iListIdx] = -1;
+                return 0;
+            }
+        }
+        else
+        {
+            printf("Error SERVICE_CHOICE with 0x%X.\r\n", buffer[iOffset]);
+            return 0;
+        }
+    }
+    return iOffset;
 }
 
 void recvSleep(float fMilliSeconds)
 {
-	if(fMilliSeconds > 0)
-	{
+    if(fMilliSeconds > 0)
+    {
 #ifdef _WIN32
-		if(fMilliSeconds < 1)
-			Sleep(1);
-		else
-			Sleep(1 * fMilliSeconds);
+        if(fMilliSeconds < 1)
+            Sleep(1);
+        else
+            Sleep(1 * fMilliSeconds);
 #else
-		if(fMilliSeconds >= 1)
-			usleep(1000 * fMilliSeconds);
+        if(fMilliSeconds >= 1)
+            usleep(1000 * fMilliSeconds);
 #endif
-	}
+    }
 }
 
-int sendBroadcast(int iRetryCount, socket_t clientSocket, 
-					struct sockaddr_in my_addr, 
-					struct sockaddr_in user_addr, 
-					unsigned int * ipArrayList, unsigned int * objIDList)
+socket_t initializeSendSocket(char * networkIP, int port, 
+                    struct sockaddr_in* my_addr)
+{
+    socket_t clientSendSocket;
+    struct sockaddr_in user_addr;
+    
+#ifdef _WIN32
+    WSADATA wsadata;
+    if (0 == WSAStartup(MAKEWORD(2, 2), &wsadata))
+    {
+        printf("Socket opened r\n");
+    }
+    else
+    {
+        printf("Socket open failed \r\n");
+        return -1;
+    }
+#endif
+    clientSendSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    my_addr->sin_family=AF_INET;
+    my_addr->sin_port=htons(port);
+	// NOTICE: It should not change into 192.168.168.255, otherwise the socket would crash.
+    my_addr->sin_addr.s_addr=inet_addr("255.255.255.255");
+    memset(&(my_addr->sin_zero), 0x00, 8);
+
+    int so_broadcast=1;
+    setsockopt(clientSendSocket, SOL_SOCKET, SO_BROADCAST, 
+        (char *)&so_broadcast, sizeof(so_broadcast));
+
+    inet_setNonBlocking(clientSendSocket);
+    
+    user_addr.sin_family=AF_INET;
+    user_addr.sin_port=htons(port);
+    // user_addr->sin_addr.s_addr=htonl(INADDR_ANY);
+    // printf("set IP to INADDR_ANY and bind to clientSocket. \r\n");
+    user_addr.sin_addr.s_addr=inet_addr(networkIP);
+    printf("set user_addr to networkIP (%s:%d) and bind to clientSendSocket(%d). \r\n", networkIP, port, clientSendSocket);
+    memset(&(user_addr.sin_zero), 0x00, 8);
+    
+    if((bind(clientSendSocket, (struct sockaddr *)&user_addr,
+                                    sizeof(struct sockaddr)))==-1)
+    {
+        printf("initializeSendSocket::bind failed we will close socket with %d. \r\n", clientSendSocket);
+        closesocket(clientSendSocket);
+		// We have to return -1 here otherwise we will create clientRecvSocket incorrectly
+        return -1;
+    }
+    
+    return clientSendSocket;
+}
+
+
+// #define RECV_PORT 47808
+socket_t initializeRecvSocket(int port)
+{
+    socket_t clientRecvSocket;
+    
+#ifdef _WIN32
+    WSADATA wsadata;
+    if (0 == WSAStartup(MAKEWORD(2, 2), &wsadata))
+    {
+        printf("Socket opened r\n");
+    }
+    else
+    {
+        printf("Socket open failed \r\n");
+        return -1;
+    }
+#endif
+    clientRecvSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    inet_setNonBlocking(clientRecvSocket);
+    
+    struct sockaddr_in  recv_255_addr;
+    memset((char *)&recv_255_addr, 0x00, sizeof(recv_255_addr));
+    recv_255_addr.sin_family=AF_INET;
+    recv_255_addr.sin_addr.s_addr=inet_addr("192.168.168.255");
+    // recv_255_addr.sin_port=htons(RECV_PORT);
+    recv_255_addr.sin_port=htons(port);
+    memset(&(recv_255_addr.sin_zero), 0x00, 8);
+
+    
+    if((bind(clientRecvSocket, (struct sockaddr *)&recv_255_addr,
+                                    sizeof(struct sockaddr)))==-1)
+    {
+        printf("bind failed. \r\n");
+        return -1;
+    }
+    return clientRecvSocket;
+}
+
+#define RECV_TIMEOUT    0x02
+int sendWhoIsBroadcast(int iRetryCount, int iInstanceNumber, 
+                     socket_t clientSendSocket, socket_t clientRecvSocket, 
+                     struct sockaddr_in my_addr, 
+                     unsigned int  * ipArrayList, 
+                     unsigned int  * controlDstSpecList, 
+                     unsigned int  * NPDUList, 
+                     unsigned int  * objectIdentifierList, 
+                     unsigned int  * maxADPUList)
 {
     int i = 0;
-	int iSendCount = 0;
-	int iRecvCount = 0;
-	unsigned char buf[MAXDATASIZE];
-	unsigned int size;
-	int iListLen = 0;
-	
-		printf("Enter sendBroadcast \r\n");
-	for(i=0; i<iRetryCount; i++)
-	{
-		memset(buf, 0x00, MAXDATASIZE);
-		memcpy(buf, WHOIS_PACKET, WHOIS_LENGTH);
-		iSendCount = sendto(clientSocket, (char *)buf, WHOIS_LENGTH, 0, 
-			(struct sockaddr *)&my_addr, sizeof(my_addr));
+    int iSendCount = 0;
+    int iRecvCount = 0;
+    unsigned char buf[MAXDATASIZE];
+    unsigned int size;
+    int iListLen = 0;
+    
+    int iClientCount = 0;
+
+    time_t current_time, now;
+    
+    struct sockaddr_in  recv_addr;
+    memset((char *)&recv_addr, 0x00, sizeof(recv_addr));
+//    recv_2_addr.sin_family=AF_INET;
+//    recv_2_addr.sin_addr.s_addr=inet_addr("192.168.168.2");
+//    recv_2_addr.sin_port=htons(PORT);
+//    memset(&(recv_2_addr.sin_zero), 0x00, 8);
+
+    // printf("Enter sendBroadcast \r\n");
+    for(i=0; i<iRetryCount; i++)
+    {
+        memset(buf, 0x00, MAXDATASIZE);
+        memcpy(buf, WHOIS_PACKET, WHOIS_LENGTH);
+        if(iInstanceNumber != 0)
+        {
+           buf[3]                = 0x12;
+           buf[WHOIS_LENGTH]     = 0x0A;
+           buf[WHOIS_LENGTH + 1] = iInstanceNumber / 0x100;
+           buf[WHOIS_LENGTH + 2] = iInstanceNumber % 0x100;
+           buf[WHOIS_LENGTH + 3] = 0x1A;
+           buf[WHOIS_LENGTH + 4] = iInstanceNumber / 0x100;
+           buf[WHOIS_LENGTH + 5] = iInstanceNumber % 0x100;
+           
+           iSendCount = sendto(clientSendSocket, (char *)buf, WHOIS_LENGTH + 6, 0, 
+                (struct sockaddr *)&my_addr, sizeof(my_addr));
+        }
+        else 
+        {
+           iSendCount = sendto(clientSendSocket, (char *)buf, WHOIS_LENGTH, 0, 
+                (struct sockaddr *)&my_addr, sizeof(my_addr));
+        }
 #ifdef _WIN32
-		recvSleep(1);
+        recvSleep(1);
 #else
-		recvSleep(0);
+        recvSleep(0);
 #endif
-		printf("send %d OK \r\n", iSendCount);
-		size = sizeof(user_addr);
-		while(1)
-		{
-			memset(buf, 0x00, MAXDATASIZE);
-			printf("try to  recvfrom \r\n");
-			iRecvCount = recvfrom(clientSocket, (char *)buf, 
-				MAXDATASIZE, 0, (struct sockaddr *)&user_addr, &size);
-			if (iRecvCount == -1)
-			{
-				printf("recvfrom over \r\n");
-				break;
-			}
-			if((iRecvCount == iSendCount)
-				&& (memcmp(buf, WHOIS_PACKET, WHOIS_LENGTH) == 0))
-			{
-				printf("Omit broadcast sent to me \r\n");
-				continue;
-			}
-			else if (iRecvCount > 0)
-			{
-				printf("we Receive %d .\r\n", iRecvCount);
-				iListLen = dealResponse(user_addr, buf, iRecvCount, ipArrayList, objIDList, iListLen);
-				recvSleep(1);
-			}
-		}
-		printf("-------------------%d----------------------- \r\n", i + 1);
-	}
-	return iListLen;
+        // printf("send %d OK \r\n", iSendCount);
+        size = sizeof(struct sockaddr_in);
+
+        current_time = now = time(NULL);
+        while(1)
+        {
+            memset(buf, 0x00, MAXDATASIZE);
+            // printf("------------------try to  recvfrom------------------ \r\n");
+            iRecvCount = recvfrom(clientRecvSocket, (char *)buf, 
+                MAXDATASIZE, 0, (struct sockaddr *)&recv_addr, (socklen_t *)&size);
+            if (iRecvCount == -1)
+            {
+            //    printf("recvfrom return -1 because of (%d):(%s) \r\n",
+            //        errno, strerror(errno));
+                now = time(NULL);
+                if(now - current_time > RECV_TIMEOUT)
+                {
+                    // printf("we detect %d clients.\r\n", iClientCount);
+                    break;
+                }
+                else
+                {
+                    recvSleep(1);
+                    continue;
+                }
+            }
+            
+            if((iRecvCount == iSendCount)
+                && (memcmp(buf, WHOIS_PACKET, WHOIS_LENGTH) == 0))
+            {
+                printf("Omit broadcast sent to me \r\n");
+                continue;
+            }
+            else if (iRecvCount > 0)
+            {
+                // printf("we Receive %d .\r\n", iRecvCount);
+                iListLen = dealWhoIsResponse(recv_addr, buf, iRecvCount, 
+                         ipArrayList, 
+                         controlDstSpecList, 
+                         NPDUList, 
+                         objectIdentifierList, 
+                         maxADPUList,
+                         iClientCount);
+                iClientCount++;
+                recvSleep(1);
+            }
+        }
+        printf("-------------------(%d)----------------------- \r\n", i + 1);
+    }
+    return iClientCount;
 }
 
 #define  SEND_BROADCAST_TIMES    1
 Cell inet_UdpSocket_getBacnetDeviceList(SedonaVM* vm, Cell* params)
 {
+    int iClientCount = 0;
   // void* self              = params[0].aval;
-  char*     ipAddress      = params[1].aval;
-  uint32_t* ipArrayList    = params[2].aval;
-  uint32_t* objIDList      = params[3].aval;
-  int32_t* iListLenPtr     = params[4].aval;
+  char*     ipAddress               = params[1].aval;
+  int32_t   port                    = params[2].ival;
+  uint32_t* ipArrayList             = params[3].aval;
+  uint32_t* controlDstSpecList      = params[4].aval;
+  uint32_t* NPDUList                = params[5].aval;
+  uint32_t* objectIdentifierList    = params[6].aval;
+  uint32_t* maxADPUList             = params[7].aval;
   
   
-	printf("Enter inet_UdpSocket_getBacnetDeviceList(%s) \r\n", ipAddress);
-	// unsigned int iListLen = 0;
-	// unsigned int ipArrayList[10];
-	// unsigned int objIDList[10];
-	memset(ipArrayList, 0x00, sizeof(int) * 10);
-	memset(objIDList, 0x00, sizeof(int) * 10);
-	memset(iListLenPtr, 0x00, sizeof(int) * 1);
+    printf("Enter inet_UdpSocket_getBacnetDeviceList(%s) \r\n", ipAddress);
+    // unsigned int iListLen = 0;
+    // unsigned int ipArrayList[10];
+    // unsigned int objIDList[10];
+    memset(ipArrayList, 0x00, sizeof(int) * 10);
+    memset(controlDstSpecList, 0x00, sizeof(int) * 10);
+    memset(NPDUList, 0x00, sizeof(int) * 10);
+    memset(objectIdentifierList, 0x00, sizeof(int) * 10);
+    memset(maxADPUList, 0x00, sizeof(int) * 10);
 
 
-	socket_t clientSocket;
-	struct sockaddr_in  my_addr;
-	struct sockaddr_in  user_addr;
-	clientSocket = initializeSocket(ipAddress, &my_addr, &user_addr);
-	if (clientSocket > 0)
+    socket_t clientSendSocket;
+    struct sockaddr_in  my_addr;
+    // struct sockaddr_in  recv_addr;
+    clientSendSocket = initializeSendSocket(ipAddress, port, &my_addr); // , &recv_addr);
+    if (clientSendSocket > 0)
+    {
+        socket_t clientRecvSocket;
+        // printf("Call sendBroadcast \r\n");
+        clientRecvSocket = initializeRecvSocket(port);
+        iClientCount = sendWhoIsBroadcast(SEND_BROADCAST_TIMES, 0, 
+            clientSendSocket, clientRecvSocket, my_addr, // recv_addr, 
+            ipArrayList, 
+            controlDstSpecList, 
+            NPDUList, 
+            objectIdentifierList, 
+            maxADPUList);
+        closesocket(clientRecvSocket);
+    }
+	if(clientSendSocket > 0)
 	{
-		printf("Call sendBroadcast \r\n");
-		*iListLenPtr = sendBroadcast(SEND_BROADCAST_TIMES, 
-			clientSocket, my_addr, user_addr, 
-			ipArrayList, objIDList);
+        closesocket(clientSendSocket);
 	}
-	closesocket(clientSocket);
-	if (*iListLenPtr <= 0)
+    
+    Cell ret;
+    ret.ival = iClientCount;  
+    return ret;
+}
+
+
+Cell inet_UdpSocket_getBacnetDevice(SedonaVM* vm, Cell* params)
+{
+    int iClientCount = 0;
+  // void* self              = params[0].aval;
+  char*     ipAddress               = params[1].aval;
+  int32_t   port                    = params[2].ival;
+  int32_t   iInstanceNumber         = params[3].ival;
+  uint32_t* ipArrayList             = params[4].aval;
+  uint32_t* controlDstSpecList      = params[5].aval;
+  uint32_t* NPDUList                = params[6].aval;
+  uint32_t* objectIdentifierList    = params[7].aval;
+  uint32_t* maxADPUList             = params[8].aval;
+  
+  
+    printf("Enter inet_UdpSocket_getBacnetDevice(%s) \r\n", ipAddress);
+    // unsigned int iListLen = 0;
+    // unsigned int ipArrayList[10];
+    // unsigned int objIDList[10];
+    memset(ipArrayList, 0x00, sizeof(int) * 10);
+    memset(controlDstSpecList, 0x00, sizeof(int) * 10);
+    memset(NPDUList, 0x00, sizeof(int) * 10);
+    memset(objectIdentifierList, 0x00, sizeof(int) * 10);
+    memset(maxADPUList, 0x00, sizeof(int) * 10);
+
+
+    socket_t clientSendSocket;
+    struct sockaddr_in  my_addr;
+    // struct sockaddr_in  recv_addr;
+    clientSendSocket = initializeSendSocket(ipAddress, port, &my_addr); // , &recv_addr);
+    if (clientSendSocket > 0)
+    {
+        socket_t clientRecvSocket;
+        // printf("Call sendBroadcast \r\n");
+        clientRecvSocket = initializeRecvSocket(port);
+        iClientCount = sendWhoIsBroadcast(SEND_BROADCAST_TIMES, iInstanceNumber, 
+            clientSendSocket, clientRecvSocket, my_addr, // recv_addr, 
+            ipArrayList, 
+            controlDstSpecList, 
+            NPDUList, 
+            objectIdentifierList, 
+            maxADPUList);
+        closesocket(clientRecvSocket);
+    }
+	if(clientSendSocket > 0)
 	{
-    	return falseCell;
+        closesocket(clientSendSocket);
 	}
-	else
+    
+    Cell ret;
+    ret.ival = iClientCount;  
+    return ret;
+}
+
+
+int g_iClientCount = 0;
+#define SERVICE_CHOICE_IAM_ROUTER    0x01
+int dealWhoIsRouterResponse(struct sockaddr_in user_addr, unsigned char * buffer, int iLen, 
+                 unsigned int  * ipArrayList, 
+                 unsigned int  * networkNumberList)
+{
+    int i = 0;
+    int iOffset = 0;
+    printf("IP = %s. we Receive %d .\r\n", inet_ntoa(user_addr.sin_addr), iLen);
+    printf("Type: %X. Function: %X. BVLC-Length: %X. ", 
+        buffer[0], buffer[1], (int)convertShortFromBuffer(buffer + 2));
+    printf("Version: %X. Control: %X.\r\n", buffer[4], buffer[5]);
+    
+    // Source specifier: SNET, SLEN and SADR absent
+    if((buffer[5] & 0x08) == 0x00)   // 0x80
+    {
+        iOffset = 6;
+        if(buffer[iOffset] == SERVICE_CHOICE_IAM_ROUTER)
+        {
+            iOffset++;
+            int iNetworkNumberCount = iLen - iOffset;
+            if(iNetworkNumberCount % 2 == 0)
+            {
+                iNetworkNumberCount = iNetworkNumberCount / 2;
+                for(i =0; i < iNetworkNumberCount; i++)
+                {
+                    int iNetworkNumber = (int)convertShortFromBuffer(buffer + iOffset + 2 * i);
+                    printf("Network Number: %d. \r\n", iNetworkNumber);
+                    ipArrayList[g_iClientCount] = (unsigned int)(user_addr.sin_addr.s_addr);
+                    networkNumberList[g_iClientCount] = iNetworkNumber;
+                    g_iClientCount++;
+                }
+            }
+            else
+            {
+                printf("Error iNetworkNumberCount with 0x%X.\r\n", iNetworkNumberCount);
+                return 0;
+            }
+        }
+        else
+        {
+            printf("Error SERVICE_CHOICE with 0x%X.\r\n", buffer[iOffset]);
+            return 0;
+        }
+    }
+    else if((buffer[5] & 0x08) == 0x08)   // 0x88
+    {
+        printf("Error Control: %X.\r\n", buffer[5]);
+    }
+    return iOffset;
+}
+
+int sendWhoIsRouterBroadcast(int iRetryCount,
+                     int iSubNetworkID, 
+                     socket_t clientSendSocket, socket_t clientRecvSocket, 
+                     struct sockaddr_in my_addr, 
+                     unsigned int  * ipArrayList, 
+                     unsigned int  * networkNumberList)
+{
+    int i = 0;
+    int iSendCount = 0;
+    int iRecvCount = 0;
+    unsigned char buf[MAXDATASIZE];
+    unsigned int size;
+    int iListLen = 0;
+    
+    g_iClientCount = 0;
+    
+    time_t current_time, now;
+    
+    struct sockaddr_in  recv_addr;
+    memset((char *)&recv_addr, 0x00, sizeof(recv_addr));
+    printf("Enter sendWhoIsRouterBroadcast with iSubNetworkID = %d\r\n", iSubNetworkID);
+    for(i=0; i<iRetryCount; i++)
+    {
+        memset(buf, 0x00, MAXDATASIZE);
+        memcpy(buf, WHOIS_ROUTER_To_NETWORK_PACKET, WHOIS_ROUTER_To_NETWORK_LENGTH);
+        if(iSubNetworkID != 0)
+        {
+           buf[3]                                  = 0x09;
+           buf[WHOIS_ROUTER_To_NETWORK_LENGTH]     = iSubNetworkID / 0x100;
+           buf[WHOIS_ROUTER_To_NETWORK_LENGTH + 1] = iSubNetworkID % 0x100;
+           
+            printf("Enter sendto with iSubNetworkID = %d\r\n", iSubNetworkID);
+           iSendCount = sendto(clientSendSocket, (char *)buf, 
+                WHOIS_ROUTER_To_NETWORK_LENGTH + 2, 0, 
+                (struct sockaddr *)&my_addr, sizeof(my_addr));
+            
+        }
+        else
+        {
+            iSendCount = sendto(clientSendSocket, (char *)buf, 
+                  WHOIS_ROUTER_To_NETWORK_LENGTH, 0, 
+                  (struct sockaddr *)&my_addr, sizeof(my_addr));
+        }
+#ifdef _WIN32
+        recvSleep(1);
+#else
+        recvSleep(0);
+#endif
+        // printf("send %d OK \r\n", iSendCount);
+        size = sizeof(struct sockaddr_in);
+
+        current_time = now = time(NULL);
+        while(1)
+        {
+            memset(buf, 0x00, MAXDATASIZE);
+            // printf("------------------try to  recvfrom------------------ \r\n");
+            iRecvCount = recvfrom(clientRecvSocket, (char *)buf, 
+                MAXDATASIZE, 0, (struct sockaddr *)&recv_addr, (socklen_t *)&size);
+            if (iRecvCount == -1)
+            {
+            //    printf("recvfrom return -1 because of (%d):(%s) \r\n",
+            //        errno, strerror(errno));
+                now = time(NULL);
+                if(now - current_time > RECV_TIMEOUT)
+                {
+                    // printf("we detect %d clients.\r\n", iClientCount);
+                    break;
+                }
+                else
+                {
+                    recvSleep(1);
+                    continue;
+                }
+            }
+            
+            if((iRecvCount == iSendCount)
+                && (memcmp(buf, WHOIS_PACKET, WHOIS_LENGTH) == 0))
+            {
+                printf("Omit broadcast sent to me \r\n");
+                continue;
+            }
+            else if (iRecvCount > 0)
+            {
+                // printf("we Receive %d .\r\n", iRecvCount);
+                iListLen = dealWhoIsRouterResponse(recv_addr, buf, iRecvCount, 
+                         ipArrayList, 
+                         networkNumberList);
+                g_iClientCount++;
+                recvSleep(1);
+            }
+        }
+        printf("-------------------(%d)----------------------- \r\n", i + 1);
+    }
+    return g_iClientCount;
+}
+
+
+Cell inet_UdpSocket_getBacnetRouterDeviceList(SedonaVM* vm, Cell* params)
+{
+    int iClientCount = 0;
+  // void* self              = params[0].aval;
+  char*     ipAddress               = params[1].aval;
+  int32_t   port                    = params[2].ival;
+  uint32_t* ipArrayList             = params[3].aval;
+  uint32_t* networkNumberList       = params[4].aval;
+  
+  
+    printf("Enter inet_UdpSocket_getBacnetRouterDeviceList(%s) \r\n", ipAddress);
+    // unsigned int iListLen = 0;
+    // unsigned int ipArrayList[10];
+    // unsigned int objIDList[10];
+    memset(ipArrayList, 0x00, sizeof(int) * 10);
+    memset(networkNumberList, 0x00, sizeof(int) * 10);
+
+
+    socket_t clientSendSocket;
+    struct sockaddr_in  my_addr;
+    // struct sockaddr_in  recv_addr;
+    clientSendSocket = initializeSendSocket(ipAddress, port, &my_addr); // , &recv_addr);
+    if (clientSendSocket > 0)
+    {
+        socket_t clientRecvSocket;
+        // printf("Call sendBroadcast \r\n");
+        clientRecvSocket = initializeRecvSocket(port);
+        iClientCount = sendWhoIsRouterBroadcast(SEND_BROADCAST_TIMES, 0, 
+            clientSendSocket, clientRecvSocket, my_addr, // recv_addr, 
+            ipArrayList, 
+            networkNumberList);
+        closesocket(clientRecvSocket);
+    }
+	if(clientSendSocket > 0)
 	{
-    	return trueCell;
+        closesocket(clientSendSocket);
 	}
+    
+    Cell ret;
+    ret.ival = iClientCount - 1;  
+    return ret;
+}
+
+Cell inet_UdpSocket_getBacnetRouterDevice(SedonaVM* vm, Cell* params)
+{
+    int iClientCount = 0;
+  // void* self              = params[0].aval;
+  char*     ipAddress               = params[1].aval;
+  int32_t   port                    = params[2].ival;
+  int32_t   iSubNetworkID           = params[3].ival;
+  uint32_t* ipArrayList             = params[4].aval;
+  uint32_t* networkNumberList       = params[5].aval;
+  
+  
+    printf("Enter inet_UdpSocket_getBacnetRouterDevice(%s) \r\n", ipAddress);
+    // unsigned int iListLen = 0;
+    // unsigned int ipArrayList[10];
+    // unsigned int objIDList[10];
+    memset(ipArrayList, 0x00, sizeof(int) * 10);
+    memset(networkNumberList, 0x00, sizeof(int) * 10);
+
+
+    socket_t clientSendSocket;
+    struct sockaddr_in  my_addr;
+    // struct sockaddr_in  recv_addr;
+    clientSendSocket = initializeSendSocket(ipAddress, port, &my_addr); // , &recv_addr);
+    if (clientSendSocket > 0)
+    {
+        socket_t clientRecvSocket;
+        // printf("Call sendBroadcast \r\n");
+        clientRecvSocket = initializeRecvSocket(port);
+        iClientCount = sendWhoIsRouterBroadcast(SEND_BROADCAST_TIMES, 
+            iSubNetworkID, 
+            clientSendSocket, clientRecvSocket, my_addr, // recv_addr, 
+            ipArrayList, 
+            networkNumberList);
+        closesocket(clientRecvSocket);
+    }
+	if(clientSendSocket > 0)
+	{
+        closesocket(clientSendSocket);
+	}
+    
+//    printf("clientSendSocket ipArrayList[0] = %u \r\n", ipArrayList[0]);
+//    printf("clientSendSocket networkNumberList[0] = %d \r\n", networkNumberList[0]);
+    Cell ret;
+    ret.ival = iClientCount - 1;  
+    return ret;
 }
 
 
