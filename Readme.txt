@@ -12,6 +12,8 @@ sedona_dev ALL=(ALL) ALL
 2.首先是安装jdk1.6.0_45。
 这里必须是这个1.6.0_45的Java SE 6版本。不能使用Java SE 8版本，否则无法编译。。
 文件下载地址为：https://www.oracle.com/java/technologies/javase-java-archive-javase6-downloads.html
+登录用户名为我的邮箱。密码末尾带有A。
+
 下载以后，执行下面的指令：
 sedona_dev@ubuntu:~$ chmod 777 jdk-6u45-linux-i586.bin 
 sedona_dev@ubuntu:~$ mkdir jdk
