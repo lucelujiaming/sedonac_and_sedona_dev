@@ -512,7 +512,7 @@ int dealWhoIsResponse(struct sockaddr_in user_addr, unsigned char * buffer, int 
     {
         // Destination MAC Layer Address Length
         iOffset = 10 + macAddressLength;
-        printf("Unconfirmed Service Choice: %X. ", buffer[iOffset + 1]);
+        printf("1::Unconfirmed Service Choice: %X. ", buffer[iOffset + 1]);
         if(buffer[iOffset + 1] == SERVICE_CHOICE_IAM)
         {
             NPDUList[iListIdx] = 0x00;
@@ -556,7 +556,7 @@ int dealWhoIsResponse(struct sockaddr_in user_addr, unsigned char * buffer, int 
     }
     // Source specifier: SNET, SLEN and SADR present, 
     //                   SLEN=0 invalid, SLEN specifies length of SADR
-    if((buffer[5] & 0x08) == 0x08)   // 0x28
+    else if((buffer[5] & 0x08) == 0x08)   // 0x28
     {
         iOffset = 9;
         int sourceNetworkAddress = convertShortFromBuffer(buffer + iOffset);
@@ -579,7 +579,7 @@ int dealWhoIsResponse(struct sockaddr_in user_addr, unsigned char * buffer, int 
             return 0;
         }
         iOffset += 2;
-        printf("Unconfirmed Service Choice: %X. ", buffer[iOffset]);
+        printf("2::Unconfirmed Service Choice: %X. ", buffer[iOffset]);
         if(buffer[iOffset] == SERVICE_CHOICE_IAM)
         {
             iOffset++;
@@ -678,7 +678,7 @@ socket_t initializeSendSocket(char * networkIP, int port,
     user_addr.sin_addr.s_addr=inet_addr(networkIP);
     printf("set user_addr to networkIP (%s:%d) and bind to clientSendSocket(%d). \r\n", networkIP, port, clientSendSocket);
     memset(&(user_addr.sin_zero), 0x00, 8);
-    
+
     if((bind(clientSendSocket, (struct sockaddr *)&user_addr,
                                     sizeof(struct sockaddr)))==-1)
     {
@@ -714,8 +714,12 @@ socket_t initializeRecvSocket(int port)
     
     struct sockaddr_in  recv_255_addr;
     memset((char *)&recv_255_addr, 0x00, sizeof(recv_255_addr));
-    recv_255_addr.sin_family=AF_INET;
-    recv_255_addr.sin_addr.s_addr=inet_addr("192.168.168.255");
+    recv_255_addr.sin_family = AF_INET;
+#ifdef _WIN32
+	recv_255_addr.sin_addr.s_addr = INADDR_ANY; 
+#else
+    recv_255_addr.sin_addr.s_addr = inet_addr("192.168.168.255");
+#endif
     // recv_255_addr.sin_port=htons(RECV_PORT);
     recv_255_addr.sin_port=htons(port);
     memset(&(recv_255_addr.sin_zero), 0x00, 8);
@@ -725,6 +729,14 @@ socket_t initializeRecvSocket(int port)
                                     sizeof(struct sockaddr)))==-1)
     {
         printf("bind failed. \r\n");
+#ifdef _WIN32
+		DWORD err = GetLastError();
+		DWORD errWSA = WSAGetLastError();
+		if (errWSA == WSAEADDRNOTAVAIL)
+		{
+			printf("The address is invalide.\r\n");
+		}
+#endif
         return -1;
     }
     return clientRecvSocket;
@@ -782,7 +794,7 @@ int sendWhoIsBroadcast(int iRetryCount, int iInstanceNumber,
                 (struct sockaddr *)&my_addr, sizeof(my_addr));
         }
 #ifdef _WIN32
-        recvSleep(1);
+        recvSleep(500);
 #else
         recvSleep(0);
 #endif
@@ -829,7 +841,10 @@ int sendWhoIsBroadcast(int iRetryCount, int iInstanceNumber,
                          objectIdentifierList, 
                          maxADPUList,
                          iClientCount);
-                iClientCount++;
+				if(iListLen > 0)
+				{
+                   iClientCount++;
+				}
                 recvSleep(1);
             }
         }
@@ -1085,7 +1100,10 @@ int sendWhoIsRouterBroadcast(int iRetryCount,
                 iListLen = dealWhoIsRouterResponse(recv_addr, buf, iRecvCount, 
                          ipArrayList, 
                          networkNumberList);
-                g_iClientCount++;
+				if(iListLen > 0)
+				{
+                   g_iClientCount++;
+				}
                 recvSleep(1);
             }
         }

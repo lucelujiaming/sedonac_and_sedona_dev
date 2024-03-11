@@ -9,6 +9,9 @@
 #include <unistd.h>
 #endif
 
+
+#define modbusDefaultRetCell  trueCell
+
 Cell ModBus_remDev_dRtuO(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
@@ -30,7 +33,7 @@ Cell ModBus_remDev_dRtuO(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -51,7 +54,7 @@ Cell ModBus_remDev_dRtuC(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -75,7 +78,7 @@ Cell ModBus_remDev_dRtuA(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -103,7 +106,7 @@ Cell ModBus_remDev_dRtuR(SedonaVM* vm, Cell* params)
     return ret;
 #else
     buf[0] = 1.0;
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -130,7 +133,7 @@ Cell ModBus_remDev_dRtuW(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -153,7 +156,7 @@ Cell ModBus_locDev_dRtuO(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -174,7 +177,7 @@ Cell ModBus_locDev_dRtuC(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -196,7 +199,7 @@ Cell ModBus_locDev_dRtuA(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -231,7 +234,7 @@ Cell ModBus_locDev_dRtuR(SedonaVM* vm, Cell* params)
     return ret;
 #else
     buf[0] = 1.0;
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -258,7 +261,7 @@ Cell ModBus_locDev_dRtuW(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -278,7 +281,7 @@ Cell ModBus_remDev_dTcpO(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -299,7 +302,7 @@ Cell ModBus_remDev_dTcpC(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -322,7 +325,7 @@ Cell ModBus_remDev_dTcpA(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -350,7 +353,7 @@ Cell ModBus_remDev_dTcpR(SedonaVM* vm, Cell* params)
     return ret;
 #else
     buf[0] = 1.0;
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -377,7 +380,7 @@ Cell ModBus_remDev_dTcpW(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -396,7 +399,7 @@ Cell ModBus_locDev_dTcpO(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -417,7 +420,7 @@ Cell ModBus_locDev_dTcpC(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -437,7 +440,7 @@ Cell ModBus_locDev_dTcpA(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -474,7 +477,7 @@ Cell ModBus_locDev_dTcpR(SedonaVM* vm, Cell* params)
     return ret;
 #else
     buf[0] = 1.0;
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }
 
@@ -499,6 +502,6 @@ Cell ModBus_locDev_dTcpW(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return modbusDefaultRetCell;
 #endif
 }

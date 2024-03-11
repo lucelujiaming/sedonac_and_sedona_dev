@@ -919,9 +919,9 @@ int vmCall(SedonaVM* vm, uint16_t method, Cell* args, int argc)
         int iInd = sp->ival;
         if(iInd < 1000)
         {
-			printf("11111 -- (uint8_t*)sp->aval = %d ----sp->ival = %d----(sp + 1)->ival = %d--\n", 
-									(uint8_t*)sp->aval, sp->ival, (sp + 1)->ival);
-			printf("22222 ---((uint8_t*)sp->aval) + (sp+1)->ival = %d--\n", ((uint8_t*)sp->aval) + (sp + 1)->ival);
+		//	printf("11111 -- (uint8_t*)sp->aval = %d ----sp->ival = %d----(sp + 1)->ival = %d--\n", 
+		//							(uint8_t*)sp->aval, sp->ival, (sp + 1)->ival);
+		//	printf("22222 ---((uint8_t*)sp->aval) + (sp+1)->ival = %d--\n", ((uint8_t*)sp->aval) + (sp + 1)->ival);
 			sp->ival = sp->ival + (sp + 1)->ival;
 		}
 		else
@@ -930,7 +930,7 @@ int vmCall(SedonaVM* vm, uint16_t method, Cell* args, int argc)
 		}
         if(iInd < 1000)
         {
-			printf("33333 ---sp->ival = %d--\n", sp->ival);
+		//	printf("33333 ---sp->ival = %d--\n", sp->ival);
 		}
 								++cp; 
 								EndInstr;

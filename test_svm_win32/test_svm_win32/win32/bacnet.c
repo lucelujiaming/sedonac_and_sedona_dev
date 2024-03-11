@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
+
+#define bacnetDefaultRetCell  falseCell
+
 Cell BacNet_BIP_dO(SedonaVM* vm, Cell* params)
 {
     int port = params[1].ival;
@@ -24,7 +27,7 @@ Cell BacNet_BIP_dO(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return bacnetDefaultRetCell;
 #endif
 }
 
@@ -41,7 +44,7 @@ Cell BacNet_BIP_dC(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return bacnetDefaultRetCell;
 #endif
 }
 
@@ -63,7 +66,7 @@ Cell BacNet_BIP_dA(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return bacnetDefaultRetCell;
 #endif
 }
 
@@ -88,7 +91,7 @@ Cell BacNet_BIP_dR(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return bacnetDefaultRetCell;
 #endif
 }
 
@@ -113,7 +116,7 @@ Cell BacNet_BIP_dW(SedonaVM* vm, Cell* params)
 
     return ret;
 #else
-    return trueCell;
+    return bacnetDefaultRetCell;
 #endif
 }
 
@@ -125,34 +128,34 @@ Cell BacNet_MSTP_dO(SedonaVM* vm, Cell* params)
     int mac_address = params[4].ival;
     int retry_delay = params[5].ival;
 
+#ifndef WIN32
     Cell ret;
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_open(int port, int band, int device_instance, int mac_address, int retry_delay);
         ret.ival = mstp_open(port, band, device_instance, mac_address, retry_delay);
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dC(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
 
+#ifndef WIN32
     Cell ret;
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_close(int ctx_idx);
         ret.ival = mstp_close(ctx_idx);
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dA(SedonaVM* vm, Cell* params)
@@ -164,17 +167,17 @@ Cell BacNet_MSTP_dA(SedonaVM* vm, Cell* params)
     int object_property = params[5].ival;
     int refreshms = params[6].ival;
 
+#ifndef WIN32
     Cell ret;
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_add(int ctx_idx, int device_instance, int object_type, int object_instance, int object_property, int refreshms);
         ret.ival = mstp_add(ctx_idx, device_instance, object_type, object_instance, object_property, refreshms);
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dR(SedonaVM* vm, Cell* params)
@@ -185,21 +188,21 @@ Cell BacNet_MSTP_dR(SedonaVM* vm, Cell* params)
     int type = params[4].ival;
     float *buf = params[5].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (type >= 0) {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_read(int ctx_idx, int cache, int reg_addr, float *buf, int type);
         int result = mstp_read(ctx_idx, cache, reg_addr, buf, type);
         if (result > 0) {
             ret.ival = result;
         }
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dW(SedonaVM* vm, Cell* params)
@@ -210,21 +213,21 @@ Cell BacNet_MSTP_dW(SedonaVM* vm, Cell* params)
     int type = params[4].ival;
     float *buf = params[5].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (type >= 0) {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_write(int ctx_idx, int cache, int reg_addr, float *buf, int type);
         int result = mstp_write(ctx_idx, cache, reg_addr, buf, type);
         if (result > 0) {
             ret.ival = result;
         }
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_BIP_dS(SedonaVM* vm, Cell* params)
@@ -234,22 +237,22 @@ Cell BacNet_BIP_dS(SedonaVM* vm, Cell* params)
     int *time = params[3].aval;
     float *value = params[4].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
 
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int bip_add_schedule(int ctx_idx, char *urlBuf, int *timeBuf, float *valueBuf);
         int result = bip_add_schedule(ctx_idx, url, time, value);
         if (result >= 0) {
             ret.ival = result;
         }
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_BIP_dT(SedonaVM* vm, Cell* params)
@@ -259,22 +262,22 @@ Cell BacNet_BIP_dT(SedonaVM* vm, Cell* params)
     int *time = params[3].aval;
     float *value = params[4].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
 
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int bip_get_schedule(int ctx_idx, int sche_idx, int *timeBuf, float *valueBuf);
         int result = bip_get_schedule(ctx_idx, sche_idx, time, value);
         if (result >= 0) {
             ret.ival = result;
         }
-#endif
     }
 
     return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dS(SedonaVM* vm, Cell* params)
@@ -284,22 +287,22 @@ Cell BacNet_MSTP_dS(SedonaVM* vm, Cell* params)
     int *time = params[3].aval;
     float *value = params[4].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
 
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_add_schedule(int ctx_idx, char *urlBuf, int *timeBuf, float *valueBuf);
         int result = mstp_add_schedule(ctx_idx, url, time, value);
         if (result >= 0) {
             ret.ival = result;
         }
-#endif
-    }
+	}
 
-    return ret;
+	return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 Cell BacNet_MSTP_dT(SedonaVM* vm, Cell* params)
@@ -309,22 +312,22 @@ Cell BacNet_MSTP_dT(SedonaVM* vm, Cell* params)
     int *time = params[3].aval;
     float *value = params[4].aval;
 
+#ifndef WIN32
     Cell ret;
     ret.ival = -1;
 
     {
-#ifdef WIN32
-		ret.ival = 1;
-#else
         extern int mstp_get_schedule(int ctx_idx, int sche_idx, int *timeBuf, float *valueBuf);
         int result = mstp_get_schedule(ctx_idx, sche_idx, time, value);
         if (result >= 0) {
             ret.ival = result;
         }
-#endif
-    }
+	}
 
-    return ret;
+	return ret;
+#else
+    return bacnetDefaultRetCell;
+#endif
 }
 
 // #define ENDIAN_SWAP 1

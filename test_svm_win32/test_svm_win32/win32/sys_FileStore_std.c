@@ -106,6 +106,7 @@ char* FSexpandFilePath( const char* ord )
 
 #ifdef _WIN32
 #include <windows.h>
+#include <direct.h>
 #endif
 
 // int FileStore.doSize(Str name)
@@ -124,9 +125,26 @@ Cell sys_FileStore_doSize(SedonaVM* vm, Cell* params)
   BOOL fOk;
   WIN32_FILE_ATTRIBUTE_DATA fileInfo;
 
-  if (name == NULL) return negOneCell;
-  fOk = GetFileAttributesEx(name, GetFileExInfoStandard, (void*)&fileInfo);
-  if (!fOk) return negOneCell;
+  if (name == NULL) {
+	  return negOneCell;
+  }
+
+//  char  bufFilePath[1024];
+//  char  bufPath[1024];
+//  memset(bufFilePath, 0x00, 1024);
+//  memset(bufPath, 0x00, 1024);
+//  GetCurrentDirectoryA(1000, bufPath);
+//  sprintf(bufFilePath, "%s\\%s", bufPath, name);
+//  printf("GetCurrentDirectory = %s\r\n", bufFilePath);
+//  fOk = GetFileAttributesExA(bufFilePath, GetFileExInfoStandard, (void*)&fileInfo);
+  
+  // fOk = GetFileAttributesEx(name, GetFileExInfoStandard, (void*)&fileInfo);
+  fOk = GetFileAttributesExA(name, GetFileExInfoStandard, (void*)&fileInfo);
+  
+  if (!fOk) { 
+	  DWORD err = GetLastError();
+	  return negOneCell;
+  }
   result.ival = fileInfo.nFileSizeLow;
 #elif defined(_POSIX_SOURCE)
   struct stat statInfo;
