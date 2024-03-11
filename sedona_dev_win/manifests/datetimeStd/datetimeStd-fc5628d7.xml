@@ -1,0 +1,25 @@
+<?xml version='1.0'?>
+<kitManifest
+   name="datetimeStd"
+   checksum="fc5628d7"
+   hasNatives="true"
+   doc="true"
+   isPlay="false"
+   version="0.1.0"
+   vendor="Tridium"
+   description="date time OS service using stdlib"
+   buildHost="ubuntu"
+   buildTime="2023-05-12T10:47:38.351+08:00"
+>
+
+<!-- Dependencies -->
+<depends>
+  <depend on="sys 0.1+"/>
+  <depend on="datetime 0.1+"/>
+</depends>
+
+<!-- datetimeStd::DateTimeServiceStd -->
+<type id="0" name="DateTimeServiceStd" sizeof="128" base="datetime::DateTimeService">
+</type>
+
+</kitManifest>

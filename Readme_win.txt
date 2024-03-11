@@ -55,46 +55,47 @@ export JRE_HOME="C:\Program Files (x86)\Java\jdk1.6.0_45\jre"
    1. 把整个目录拷贝到c盘。文件目录为“C:\sedona_dev\sedona_dev”。
    2. 进入目录C:\sedona_dev\sedona_dev中：
    3. 执行下面的命令就会生成kit文件和xml文件：
-    C:\sedona_dev\sedona_dev>java -Dsedona.home="C:\sedona_dev\sedona_dev" -cp "C:\sedona_dev\sedona_dev\lib\*"  sedonac/Main src\sys
-      Parse [50 files]
-      WriteKit [C:\sedona_dev\sedona_dev\kits\sys\sys-82791acf-0.1.0.kit]
-      WriteManifest [C:\sedona_dev\sedona_dev\manifests\sys\sys-82791acf.xml]
-    *** Success! ***
+        C:\sedona_dev\sedona_dev>java -Dsedona.home="C:\sedona_dev\sedona_dev" -cp "C:\sedona_dev\sedona_dev\lib\*"  sedonac/Main src\sys
+          Parse [50 files]
+          WriteKit [C:\sedona_dev\sedona_dev\kits\sys\sys-82791acf-0.1.0.kit]
+          WriteManifest [C:\sedona_dev\sedona_dev\manifests\sys\sys-82791acf.xml]
+        *** Success! ***
     
    生成app.scode也是可以的。
-    C:\sedona_dev\sedona_dev\source>java -Dsedona.home="C:\sedona_dev\sedona_dev" -cp "C:\sedona_dev\sedona_dev\lib\*"  sedonac/Main app.xml
-      ReadKits [16 kits]
-      WriteImage [C:\sedona_dev\sedona_dev\source\app.scode] (101500 bytes)
-      +----------------------------------
-      |  Data:      6.9kb (7044 bytes)
-      |  Code:     99.1kb (101500 bytes)
-      |  Total:     106kb (108544 bytes)
-      +----------------------------------
-    *** Success! ***
-    C:\sedona_dev\sedona_dev>
+        C:\sedona_dev\sedona_dev\source>java -Dsedona.home="C:\sedona_dev\sedona_dev" -cp "C:\sedona_dev\sedona_dev\lib\*"  sedonac/Main app.xml
+          ReadKits [16 kits]
+          WriteImage [C:\sedona_dev\sedona_dev\source\app.scode] (101500 bytes)
+          +----------------------------------
+          |  Data:      6.9kb (7044 bytes)
+          |  Code:     99.1kb (101500 bytes)
+          |  Total:     106kb (108544 bytes)
+          +----------------------------------
+        *** Success! ***
+        C:\sedona_dev\sedona_dev>
     
     也可以写一个脚本来实现上面的步骤：
-    C:\sedona_dev\sedona_dev>type bin\sedonac.bat
-    @echo off
-    java -Dsedona.home="C:\sedona_dev\sedona_dev" -cp "C:\sedona_dev\sedona_dev\lib\*"  sedonac/Main %1
+        C:\sedona_dev\sedona_dev>type bin\sedonac.bat
+        @echo off
+        set "CURRENT_DIR=%cd%"
+        java -Dsedona.home="%CURRENT_DIR%" -cp "%CURRENT_DIR%\lib\*"  sedonac/Main %1
 
+    之后执行下面的命令就会生成kit文件和xml文件。并完成所有的编译工作。
+        bin\sedonac.bat src\Arith\
+        bin\sedonac.bat src\sys\
+        bin\sedonac.bat platforms\src\XunGaoAuto\unix\
+        bin\sedonac.bat src\inet\
+        bin\sedonac.bat src\sox\
+        bin\sedonac.bat src\Variable\
+        bin\sedonac.bat src\FieldBus\
+        bin\sedonac.bat src\PID\
+        bin\sedonac.bat src\Timer\
+        bin\sedonac.bat src\Math\
+        bin\sedonac.bat src\BitLogic\
+        bin\sedonac.bat src\Compare\
+        bin\sedonac.bat src\Convert\
+        bin\sedonac.bat src\WordOpr\
+        bin\sedonac.bat src\Other\
+        bin\sedonac.bat src\Schedule\
+        bin\sedonac.bat source\app.xml
 
-    C:\sedona_dev\sedona_dev>bin\sedonac.bat src\sys
-      Parse [50 files]
-      WriteKit [C:\sedona_dev\sedona_dev\kits\sys\sys-82791acf-0.1.0.kit]
-      WriteManifest [C:\sedona_dev\sedona_dev\manifests\sys\sys-82791acf.xml]
-    *** Success! ***
-    C:\sedona_dev\sedona_dev>cd source
-
-    C:\sedona_dev\sedona_dev\source>..\bin\sedonac.bat app.xml
-      ReadKits [16 kits]
-      WriteImage [C:\sedona_dev\sedona_dev\source\app.scode] (101500 bytes)
-      +----------------------------------
-      |  Data:      6.9kb (7044 bytes)
-      |  Code:     99.1kb (101500 bytes)
-      |  Total:     106kb (108544 bytes)
-      +----------------------------------
-    *** Success! ***
-    C:\sedona_dev\sedona_dev\source>
-    效果也是一样的。
 

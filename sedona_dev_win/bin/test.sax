@@ -1,0 +1,106 @@
+<?xml version='1.0'?>
+<sedonaApp>
+<schema>
+  <kit name="sys" checksum="82791acf" />
+  <kit name="BitLogic" checksum="08f49dc2" />
+  <kit name="Compare" checksum="12b0b2a0" />
+  <kit name="Convert" checksum="2e912cff" />
+  <kit name="Math" checksum="bb067daf" />
+  <kit name="ModBus" checksum="8ebaf58b" />
+  <kit name="Other" checksum="cac8e575" />
+  <kit name="PID" checksum="b2629dbe" />
+  <kit name="Schedule" checksum="f1dcee26" />
+  <kit name="Timer" checksum="5703682d" />
+  <kit name="Variable" checksum="46f86a3a" />
+  <kit name="WordOpr" checksum="1bfc4cc9" />
+  <kit name="inet" checksum="25648ba7" />
+  <kit name="platform" checksum="b8bbb7d8" />
+  <kit name="sox" checksum="397a84dd" />
+</schema>
+<app>
+  <prop name="appName" val="CMP500"/>
+  <!-- /service -->
+  <comp name="service" id="1" type="sys::Folder">
+    <prop name="meta" val="33685505"/>
+    <!-- /service/plat -->
+    <comp name="plat" id="2" type="platform::UnixPlatformService">
+      <prop name="meta" val="16842753"/>
+    </comp>
+    <!-- /service/users -->
+    <comp name="users" id="3" type="sys::UserService">
+      <prop name="meta" val="268500993"/>
+      <!-- /service/users/admin -->
+      <comp name="admin" id="4" type="sys::User">
+        <prop name="cred" val="hE49ksThgAeLkWB3NUU1NWeDO54="/>
+        <prop name="perm" val="2147483647"/>
+        <prop name="prov" val="255"/>
+      </comp>
+    </comp>
+    <!-- /service/datetim -->
+    <comp name="datetim" id="5" type="Schedule::DateTime">
+      <prop name="meta" val="17170433"/>
+    </comp>
+    <!-- /service/sox -->
+    <comp name="sox" id="6" type="sox::SoxService">
+      <prop name="meta" val="436273153"/>
+    </comp>
+    <!-- /service/ModBus1 -->
+    <comp name="ModBus1" id="8" type="ModBus::rtuMaster">
+      <prop name="meta" val="403439617"/>
+      <prop name="retryDelay" val="2"/>
+      <!-- /service/ModBus1/D1 -->
+      <comp name="D1" id="9" type="ModBus::mbDevice">
+        <prop name="deviceName" val="D1"/>
+        <prop name="pointDelay" val="100"/>
+      </comp>
+      <!-- /service/ModBus1/D2 -->
+      <comp name="D2" id="18" type="ModBus::mbDevice">
+        <prop name="deviceName" val="D2"/>
+        <prop name="address" val="2"/>
+        <prop name="pointDelay" val="100"/>
+      </comp>
+    </comp>
+  </comp>
+  <!-- /play -->
+  <comp name="play" id="7" type="sys::Folder">
+    <prop name="meta" val="34013185"/>
+    <!-- /play/MIn1 -->
+    <comp name="MIn1" id="10" type="Variable::VarInput">
+      <prop name="meta" val="100859905"/>
+      <prop name="url" val="D1/int/40046"/>
+    </comp>
+    <!-- /play/MOut1 -->
+    <comp name="MOut1" id="11" type="Variable::VarOutput">
+      <prop name="meta" val="352452609"/>
+      <prop name="url" val="D1/int/40026"/>
+    </comp>
+    <!-- /play/V1 -->
+    <comp name="V1" id="12" type="Variable::Variable">
+      <prop name="meta" val="637665281"/>
+      <prop name="url" val="S1"/>
+    </comp>
+    <!-- /play/V2 -->
+    <comp name="V2" id="13" type="Variable::Variable">
+      <prop name="meta" val="907608065"/>
+      <prop name="url" val="S2"/>
+    </comp>
+    <!-- /play/MIn2 -->
+    <comp name="MIn2" id="16" type="Variable::VarInput">
+      <prop name="meta" val="286916609"/>
+      <prop name="url" val="D2/int/40023"/>
+    </comp>
+    <!-- /play/MOut2 -->
+    <comp name="MOut2" id="17" type="Variable::VarOutput">
+      <prop name="meta" val="588840961"/>
+      <prop name="url" val="D2/int/40002"/>
+    </comp>
+  </comp>
+</app>
+<links>
+  <link from="/play/MIn1.out" to="/play/MOut1.in"/>
+  <link from="/play/MOut1.in" to="/play/V1.value"/>
+  <link from="/play/MOut2.in" to="/play/V2.value"/>
+  <link from="/play/MIn2.out" to="/play/MOut2.in"/>
+</links>
+</sedonaApp>
+
