@@ -2,25 +2,30 @@
 //
 
 #include "stdafx.h"
+// #include "modbus.h"
+#include "modbus-tcp.h"
+#include "modbus-rtu.h"
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "modbus.h"
 
 #pragma warning( disable : 4996) 
 
 #define PORT_NAME "COM3"
-int _tmain(int argc, char* argv[])
+
+int test_modbus(char* port_num)
 {
 	int ret;
 	uint16_t table[3];
 	modbus_t *mb;
 	char port[20];
-	printf("argc = %d, argv[1] = %s\n", argc, argv[1]);
-	if (argc == 2)
-		strcpy(port, argv[1]);
-	else
-		strcpy(port, PORT_NAME);
+	// printf("argc = %d, argv[1] = %s\n", argc, argv[1]);
+	// if (argc == 2)
+	// 	strcpy(port, argv[1]);
+	// else
+	// 	strcpy(port, PORT_NAME);
+	strcpy(port, port_num);
 	printf("libmodbus modbu-rtu master demo: %s, 115200, N, 8, 1\n", port);
 	mb = modbus_new_rtu(port, 115200, 'N', 8, 1);
 	if (mb == NULL)
@@ -62,6 +67,21 @@ int _tmain(int argc, char* argv[])
 	}
 	modbus_close(mb);
 	modbus_free(mb);
+	// system("pause");
+	return 0;
+}
+
+int _tmain(int argc, char* argv[])
+{
+	printf("argc = %d, argv[1] = %s\n", argc, argv[1]);
+	if (argc == 2)
+	{
+		test_modbus(argv[1]);
+	}
+	else
+	{
+		test_modbus(PORT_NAME);
+	}
 	system("pause");
 	return 0;
 }

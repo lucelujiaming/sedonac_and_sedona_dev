@@ -79,19 +79,32 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="board.h" />
+    <ClInclude Include="list.h" />
     <ClInclude Include="modbus-rtu.h" />
     <ClInclude Include="modbus-tcp.h" />
     <ClInclude Include="modbus-version.h" />
     <ClInclude Include="modbus.h" />
+    <ClInclude Include="sedona.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="board.cpp" />
+    <ClCompile Include="modbus.cpp" />
+    <ClCompile Include="modbusrtumaster.cpp" />
+    <ClCompile Include="modbusrtuslave.cpp">
+      <UndefineAllPreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </UndefineAllPreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="modbustcpmaster.cpp" />
+    <ClCompile Include="modbustcpslave.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="test_libmodbus.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libmodbus_Win32.dll" />
