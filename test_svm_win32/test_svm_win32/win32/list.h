@@ -14,7 +14,7 @@ typedef struct {
 } list_head_t;
 
 #ifdef LIST_CHECK
-static __inline void list_check(list_head_t *head)
+static inline void list_check(list_head_t *head)
 {
     int len = 0;
     list_node_t *pre = NULL;
@@ -143,5 +143,18 @@ static __inline void list_delete(list_head_t *head, list_node_t *node)
 #define list_entry(ptr, type) \
     container_of(ptr, type, node)
 
+#ifdef WIN32
+    #define list_entry_safe(ptr, type) \
+          ptr ? container_of(ptr, type, node) : NULL 
+#else
+    #define list_entry_safe(ptr, type) \
+        ({ \
+          list_node_t *__ptr = (ptr); \
+          __ptr ? container_of(__ptr, type, node) : NULL; \
+        })
+#endif
+
+#define list_get_entry(head, type) \
+    list_entry_safe(list_get(head), type)
 
 #endif

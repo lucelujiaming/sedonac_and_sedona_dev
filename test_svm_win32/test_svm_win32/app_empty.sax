@@ -1,0 +1,238 @@
+<?xml version='1.0'?>
+<sedonaApp>
+<schema>
+  <kit name="sys" checksum="82791acf" />
+  <kit name="Arith" checksum="328fb4ad" />
+  <kit name="BitLogic" checksum="1e6750fe" />
+  <kit name="Compare" checksum="f01ae2ac" />
+  <kit name="Convert" checksum="2e912cff" />
+  <kit name="FieldBus" checksum="137e72f8" />
+  <kit name="Math" checksum="341f3dba" />
+  <kit name="Other" checksum="13f6eba2" />
+  <kit name="PID" checksum="b2629dbe" />
+  <kit name="Schedule" checksum="f1dcee26" />
+  <kit name="Timer" checksum="53731b64" />
+  <kit name="Variable" checksum="bf4878df" />
+  <kit name="WordOpr" checksum="4ba726ec" />
+  <kit name="inet" checksum="25648ba7" />
+  <kit name="platform" checksum="b8bbb7d8" />
+  <kit name="sox" checksum="397a84dd" />
+</schema>
+<app>
+  <prop name="appName" val="CMP500"/>
+  <!-- /service -->
+  <comp name="service" id="1" type="sys::Folder">
+    <prop name="meta" val="33685505"/>
+    <!-- /service/plat -->
+    <comp name="plat" id="2" type="platform::UnixPlatformService">
+      <prop name="meta" val="671875073"/>
+    </comp>
+    <!-- /service/users -->
+    <comp name="users" id="3" type="sys::UserService">
+      <prop name="meta" val="201588737"/>
+      <!-- /service/users/admin -->
+      <comp name="admin" id="4" type="sys::User">
+        <prop name="cred" val="hE49ksThgAeLkWB3NUU1NWeDO54="/>
+        <prop name="perm" val="2147483647"/>
+        <prop name="prov" val="255"/>
+      </comp>
+    </comp>
+    <!-- /service/datetim -->
+    <comp name="datetim" id="5" type="Schedule::DateTime">
+      <prop name="meta" val="840040449"/>
+    </comp>
+    <!-- /service/sox -->
+    <comp name="sox" id="6" type="sox::SoxService">
+      <prop name="meta" val="503578625"/>
+    </comp>
+    <!-- /service/BIP -->
+    <comp name="BIP" id="8" type="FieldBus::BacnetIP">
+      <!-- /service/BIP/BacnetR -->
+      <comp name="BacnetR" id="9" type="FieldBus::BacnetRemDev">
+        <prop name="deviceName" val="B111"/>
+        <prop name="InstanceNumber" val="1002"/>
+        <!-- /service/BIP/BacnetR/BacnetN -->
+        <comp name="BacnetN" id="10" type="Variable::BacnetNetVarIn">
+          <prop name="objectType" val="8"/>
+          <prop name="alias" val="ABCDEFG"/>
+        </comp>
+      </comp>
+    </comp>
+    <!-- /service/ModbusR -->
+    <comp name="ModbusR" id="11" type="FieldBus::ModbusRTU">
+      <!-- /service/ModbusR/ModbusR -->
+      <comp name="ModbusR" id="12" type="FieldBus::ModbusRemDev">
+        <prop name="deviceName" val="ABFG"/>
+        <!-- /service/ModbusR/ModbusR/ModbusN -->
+        <comp name="ModbusN" id="13" type="Variable::ModbusNetVarOut">
+          <prop name="Address" val="1"/>
+          <prop name="alias" val="SADFG"/>
+        </comp>
+      </comp>
+    </comp>
+  </comp>
+  <!-- /play -->
+  <comp name="play" id="7" type="sys::Folder">
+    <prop name="meta" val="34013188"/>
+    <!-- /play/Variabl -->
+    <comp name="Variabl" id="19" type="Variable::Variable">
+      <prop name="meta" val="1129054209"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="L_MSV0"/>
+    </comp>
+    <!-- /play/Variab1 -->
+    <comp name="Variab1" id="20" type="Variable::Variable">
+      <prop name="meta" val="1129512961"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="L_MSV1"/>
+    </comp>
+    <!-- /play/Variab2 -->
+    <comp name="Variab2" id="21" type="Variable::Variable">
+      <prop name="meta" val="1129971713"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="L_MSV2"/>
+    </comp>
+    <!-- /play/Variab3 -->
+    <comp name="Variab3" id="22" type="Variable::Variable">
+      <prop name="meta" val="1130430465"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="L_MSV3"/>
+    </comp>
+    <!-- /play/Variab4 -->
+    <comp name="Variab4" id="23" type="Variable::Variable">
+      <prop name="meta" val="157351937"/>
+      <prop name="alias" val="L_MSV13"/>
+    </comp>
+    <!-- /play/Variab5 -->
+    <comp name="Variab5" id="24" type="Variable::Variable">
+      <prop name="meta" val="156893185"/>
+      <prop name="alias" val="L_MSV12"/>
+    </comp>
+    <!-- /play/Variab6 -->
+    <comp name="Variab6" id="25" type="Variable::Variable">
+      <prop name="meta" val="156434433"/>
+      <prop name="alias" val="L_MSV11"/>
+    </comp>
+    <!-- /play/Variab7 -->
+    <comp name="Variab7" id="27" type="Variable::Variable">
+      <prop name="meta" val="155975681"/>
+      <prop name="alias" val="L_MSV10"/>
+    </comp>
+    <!-- /play/Variab8 -->
+    <comp name="Variab8" id="30" type="Variable::Variable">
+      <prop name="meta" val="491520001"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="SchOCC_1002"/>
+    </comp>
+    <!-- /play/Variab9 -->
+    <comp name="Variab9" id="31" type="Variable::Variable">
+      <prop name="meta" val="491978753"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="SchOCC_1003"/>
+    </comp>
+    <!-- /play/Varia10 -->
+    <comp name="Varia10" id="33" type="Variable::Variable">
+      <prop name="meta" val="492437505"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="SchOCC_1004"/>
+    </comp>
+    <!-- /play/Varia11 -->
+    <comp name="Varia11" id="34" type="Variable::Variable">
+      <prop name="meta" val="492896257"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="SchOCC_1006"/>
+    </comp>
+    <!-- /play/Varia12 -->
+    <comp name="Varia12" id="48" type="Variable::Variable">
+      <prop name="meta" val="810287105"/>
+      <prop name="alias" val="EffectOCC_1002"/>
+    </comp>
+    <!-- /play/Varia1 -->
+    <comp name="Varia1" id="49" type="Variable::Variable">
+      <prop name="meta" val="810745857"/>
+      <prop name="alias" val="EffectOCC_1003"/>
+    </comp>
+    <!-- /play/Varia2 -->
+    <comp name="Varia2" id="50" type="Variable::Variable">
+      <prop name="meta" val="811204609"/>
+      <prop name="alias" val="EffectOCC_1004"/>
+    </comp>
+    <!-- /play/Varia3 -->
+    <comp name="Varia3" id="51" type="Variable::Variable">
+      <prop name="meta" val="811663361"/>
+      <prop name="alias" val="EffectOCC_1006"/>
+    </comp>
+    <!-- /play/Varia13 -->
+    <comp name="Varia13" id="56" type="Variable::Variable">
+      <prop name="meta" val="157941761"/>
+      <prop name="alias" val="Occ"/>
+    </comp>
+    <!-- /play/Varia14 -->
+    <comp name="Varia14" id="57" type="Variable::Variable">
+      <prop name="meta" val="1415643137"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="State"/>
+    </comp>
+    <!-- /play/Varia4 -->
+    <comp name="Varia4" id="64" type="Variable::Variable">
+      <prop name="meta" val="158531585"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="C2"/>
+    </comp>
+    <!-- /play/Varia5 -->
+    <comp name="Varia5" id="65" type="Variable::Variable">
+      <prop name="meta" val="159055873"/>
+      <prop name="alias" val="I3"/>
+    </comp>
+    <!-- /play/Varia6 -->
+    <comp name="Varia6" id="66" type="Variable::Variable">
+      <prop name="meta" val="1416167425"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="H2"/>
+    </comp>
+    <!-- /play/Varia7 -->
+    <comp name="Varia7" id="76" type="Variable::Variable">
+      <prop name="meta" val="1484783617"/>
+      <prop name="alias" val="W1"/>
+    </comp>
+    <!-- /play/Varia8 -->
+    <comp name="Varia8" id="77" type="Variable::Variable">
+      <prop name="meta" val="1433600001"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="W2"/>
+    </comp>
+    <!-- /play/Varia9 -->
+    <comp name="Varia9" id="78" type="Variable::Variable">
+      <prop name="meta" val="159645697"/>
+      <prop name="ioMode" val="1"/>
+      <prop name="alias" val="H5"/>
+    </comp>
+  </comp>
+  <!-- /init -->
+  <comp name="init" id="17" type="sys::Folder">
+    <!-- /init/Variab2 -->
+    <comp name="Variab2" id="28" type="Variable::Variable">
+      <prop name="meta" val="1057685505"/>
+      <prop name="alias" val="Set1"/>
+    </comp>
+    <!-- /init/Setpoin -->
+    <comp name="Setpoin" id="29" type="Variable::Setpoint">
+      <prop name="meta" val="655032321"/>
+      <prop name="url" val="EEP_Set1"/>
+    </comp>
+  </comp>
+</app>
+<links>
+  <link from="/play/Varia12.inFloatValue" to="/play/Variabl.inFloatValue"/>
+  <link from="/play/Varia1.inFloatValue" to="/play/Variab1.inFloatValue"/>
+  <link from="/play/Varia2.inFloatValue" to="/play/Variab2.inFloatValue"/>
+  <link from="/play/Varia3.inFloatValue" to="/play/Variab3.inFloatValue"/>
+  <link from="/init/Setpoin.out" to="/init/Variab2.inFloatValue"/>
+  <link from="/play/Variab7.inFloatValue" to="/play/Variab8.inFloatValue"/>
+  <link from="/play/Variab6.inFloatValue" to="/play/Variab9.inFloatValue"/>
+  <link from="/play/Varia9.inFloatValue" to="/play/Varia10.inFloatValue"/>
+  <link from="/play/Variab3.inFloatValue" to="/play/Varia14.inFloatValue"/>
+  <link from="/play/Variab3.inFloatValue" to="/play/Varia6.inFloatValue"/>
+  <link from="/play/Variab2.inFloatValue" to="/play/Varia8.inFloatValue"/>
+</links>
+</sedonaApp>

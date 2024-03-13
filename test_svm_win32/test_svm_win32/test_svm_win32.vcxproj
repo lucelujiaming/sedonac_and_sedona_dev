@@ -79,6 +79,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="win32\bacnet.c" />
+    <ClCompile Include="win32\board.cpp" />
     <ClCompile Include="win32\datetimeStd_DateTimeServiceStd.c" />
     <ClCompile Include="win32\inet_Crypto_sha1.c" />
     <ClCompile Include="win32\inet_sha1.c" />
@@ -87,7 +88,11 @@
     <ClCompile Include="win32\inet_UdpSocket_std.c" />
     <ClCompile Include="win32\inet_util_std.c" />
     <ClCompile Include="win32\main.c" />
-    <ClCompile Include="win32\modbus.c" />
+    <ClCompile Include="win32\modbus.cpp" />
+    <ClCompile Include="win32\modbusrtumaster.cpp" />
+    <ClCompile Include="win32\modbusrtuslave.cpp" />
+    <ClCompile Include="win32\modbustcpmaster.cpp" />
+    <ClCompile Include="win32\modbustcpslave.cpp" />
     <ClCompile Include="win32\nativetable.c" />
     <ClCompile Include="win32\pid_pos.c" />
     <ClCompile Include="win32\platformManifest.c" />
@@ -104,17 +109,27 @@
     <ClCompile Include="win32\sys_Sys_win32.c" />
     <ClCompile Include="win32\sys_Test.c" />
     <ClCompile Include="win32\sys_Type.c" />
+    <ClCompile Include="win32\utils.cpp" />
     <ClCompile Include="win32\vm.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="win32\board.h" />
     <ClInclude Include="win32\errorcodes.h" />
     <ClInclude Include="win32\inet_sha1.h" />
     <ClInclude Include="win32\inet_util.h" />
     <ClInclude Include="win32\inet_util_std.h" />
     <ClInclude Include="win32\list.h" />
+    <ClInclude Include="win32\modbus-tcp.h" />
+    <ClInclude Include="win32\modbus.h" />
     <ClInclude Include="win32\scode.h" />
     <ClInclude Include="win32\sedona.h" />
     <ClInclude Include="win32\sedonaPlatform.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libmodbus_Win32.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libmodbus_Win32.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

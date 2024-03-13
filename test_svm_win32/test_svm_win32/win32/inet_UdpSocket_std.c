@@ -10,6 +10,7 @@
 //
 #include "inet_util_std.h"
 
+typedef unsigned __int8   bool;
 //
 // Define the multicast group address for Discover
 // (must match address used by SoxClient, defined in sedona.jar)

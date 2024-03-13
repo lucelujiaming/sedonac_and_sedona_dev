@@ -44,6 +44,8 @@ extern NativeMethod* nativeTable[];
 // Main
 ////////////////////////////////////////////////////////////////
 
+typedef unsigned __int8   bool;
+
 int main(int argc, char *argv[])
 {
   //int result;

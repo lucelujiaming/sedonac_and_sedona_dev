@@ -176,7 +176,7 @@ typedef SOCKET socket_t;
 #define INET_READ  0x01
 #define INET_WRITE 0x02
 
-
+typedef unsigned __int8   bool;
 // util forwards
 extern int inet_setNonBlocking(socket_t sock);
 extern bool inet_errorIsWouldBlock();

@@ -92,7 +92,6 @@
 #include <sys/stat.h>
 
 // stdint.h C99 Exact-width integer types
-typedef unsigned __int8   bool;
 typedef __int8            int8_t;
 typedef __int16           int16_t;
 typedef __int32           int32_t;

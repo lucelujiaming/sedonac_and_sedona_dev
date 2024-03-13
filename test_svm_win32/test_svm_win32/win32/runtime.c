@@ -1,4 +1,4 @@
-#include "sedona.h"
+﻿#include "sedona.h"
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
