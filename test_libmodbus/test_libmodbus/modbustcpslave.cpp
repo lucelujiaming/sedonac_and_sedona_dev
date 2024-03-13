@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 // #include "modbus.h"
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
@@ -53,16 +53,21 @@ typedef struct {
     list_node_t node;
     unsigned char addr;
 
+    // 设备刷新周期。
     unsigned int refresh_ms;
 #ifdef WIN32
     unsigned __int64 next_update;
+
+    // 设备出错时间，用于出错之后重试时刻的确定。
 	unsigned __int64 last_err;
 #else
     unsigned long long next_update;
 
-	unsigned long long last_err;
+    // 设备出错时间，用于出错之后重试时刻的确定。
+    unsigned long long last_err;
 #endif
-	unsigned int spent_time_ms;
+    // 设备扫描花费时间。
+    unsigned int spent_time_ms;
 
     list_head_t DO; // 00001, list of element_t.
     list_head_t DI; // 10001
@@ -104,8 +109,6 @@ static context_t context_table[MAX_MODBUSTCPSLAVE_NUM];
 
 static device_t* get_next_read_device(context_t *c)
 {
-	device_t *device = NULL;
-	list_node_t *dev_node = NULL;
 #ifdef WIN32
     unsigned __int64 curr_tick = get_tick_ms();
     unsigned __int64 next_tick = curr_tick;
@@ -114,13 +117,9 @@ static device_t* get_next_read_device(context_t *c)
     unsigned long long next_tick = curr_tick;
 #endif
 
-    dev_node = c->devices.first;
+    list_node_t *dev_node = c->devices.first;
     while (c->ctx_thread_running != 0 && dev_node != NULL) {
-#ifdef WIN32
-		device = (device_t*)(dev_node) ; 
-#else
-        device = list_entry_safe(dev_node, device_t);
-#endif
+        device_t *device = list_entry_safe(dev_node, device_t);
         if (device->next_update < next_tick)
             next_tick = device->next_update;
         dev_node = dev_node->next;
@@ -129,11 +128,7 @@ static device_t* get_next_read_device(context_t *c)
     if (c->ctx_thread_running != 0 && next_tick != curr_tick) {
         dev_node = c->devices.first;
         while (dev_node != NULL) {
-#ifdef WIN32
-			device = (device_t*)(dev_node) ; 
-#else
-			device = list_entry_safe(dev_node, device_t);
-#endif
+            device_t *device = list_entry_safe(dev_node, device_t);
             if (device->next_update == next_tick) {
 #ifdef WIN32
                 device->next_update = get_tick_ms() + (unsigned __int64)device->refresh_ms;
@@ -151,29 +146,16 @@ static device_t* get_next_read_device(context_t *c)
 
 static inline void exec_one_reg_write_from_list(context_t *c)
 {
-	req_t *req = NULL;
-	device_t *device = NULL;
-	element_t *element = NULL;
-	unsigned char devid = '\0';
-	unsigned short address = '\0';
-
-	list_node_t *node = NULL;
-	
     if (c->ctx_thread_running != 0 && c->write_queue.len > 0) {
         LOCK_WRITE_QUEUE;
-        node = list_get(&c->write_queue);
-#ifdef WIN32
-		req = (req_t*)(node) ; 
-#else
-		req = list_entry_safe(node, req_t);
-#endif
+        list_node_t *node = list_get(&c->write_queue);
+        req_t *req = list_entry_safe(node, req_t);
         UNLOCK_WRITE_QUEUE;
-        device = req->dev;
-        element = req->reg;
-		
+        device_t *device = req->dev;
+        element_t *element = req->reg;
         if (element->err_cnt != MAX_ERROR_COUNT) {
-            devid = device->addr;
-            address = element->addr;
+            unsigned char devid = device->addr;
+            unsigned short address = element->addr;
             if (address > 0 && address < 10000) {
                 modbus_set_slave(c->ctx_modbus, devid);
                 modbus_write_bit(c->ctx_modbus, address - 1, element->val_w);
@@ -229,68 +211,48 @@ static inline void exec_single_element_read(context_t *c, device_t *device, elem
             element->val = v;
             element->err_cnt = 0;
         } else {
-            if (element->err_cnt < MAX_ERROR_COUNT) element->err_cnt ++;
+            if (element->err_cnt < MAX_ERROR_COUNT) 
+            {
+                element->err_cnt ++;
+            }
         }
     }
 }
 
 static inline void exec_one_list_read(context_t *c, device_t *device, list_head_t *list)
 {
-	element_t *curr_element = NULL;
     list_node_t *curr = list->first;
-	
     while (c->ctx_thread_running != 0 && curr != NULL) {
-#ifdef WIN32
-		curr_element = (element_t*)(curr) ; 
-#else
-		curr_element = list_entry_safe(curr, element_t);
-#endif
+        element_t *curr_element = list_entry_safe(curr, element_t);
         exec_single_element_read(c, device, curr_element);
         exec_one_reg_write_from_list(c);
         curr = curr->next;
     }
 }
 
-static inline int is_device_offline(device_t *device)
+static inline int is_device_offline(context_t *c, device_t *device)
 {
-	element_t *element = NULL;
     list_node_t *reg_node = device->DO.first;
-    while (reg_node != NULL) {
-#ifdef WIN32
-		element = (element_t*)(reg_node) ; 
-#else
-		element = list_entry_safe(reg_node, element_t);
-#endif
+    while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+        element_t *element = list_entry_safe(reg_node, element_t);
         if (element->err_cnt != MAX_ERROR_COUNT) return 0;
         reg_node = reg_node->next;
     }
     reg_node = device->DI.first;
-    while (reg_node != NULL) {
-#ifdef WIN32
-		element = (element_t*)(reg_node) ; 
-#else
-		element = list_entry_safe(reg_node, element_t);
-#endif
+    while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+        element_t *element = list_entry_safe(reg_node, element_t);
         if (element->err_cnt != MAX_ERROR_COUNT) return 0;
         reg_node = reg_node->next;
     }
     reg_node = device->INPUT.first;
-    while (reg_node != NULL) {
-#ifdef WIN32
-		element = (element_t*)(reg_node) ; 
-#else
-		element = list_entry_safe(reg_node, element_t);
-#endif
+    while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+        element_t *element = list_entry_safe(reg_node, element_t);
         if (element->err_cnt != MAX_ERROR_COUNT) return 0;
         reg_node = reg_node->next;
     }
     reg_node = device->HOLD.first;
-    while (reg_node != NULL) {
-#ifdef WIN32
-		element = (element_t*)(reg_node) ; 
-#else
-		element = list_entry_safe(reg_node, element_t);
-#endif
+    while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+        element_t *element = list_entry_safe(reg_node, element_t);
         if (element->err_cnt != MAX_ERROR_COUNT) return 0;
         reg_node = reg_node->next;
     }
@@ -299,52 +261,30 @@ static inline int is_device_offline(device_t *device)
 
 static inline void exec_one_device_read(context_t *c, device_t *device)
 {
-#ifdef WIN32
-    unsigned __int64 delta ;
-#else
-    unsigned long long delta ;
-#endif
-	element_t *element = NULL;
-	unsigned char devid = '\0';
-	unsigned short address = '\0';
-	list_node_t *reg_node = NULL;
-	
-    if (is_device_offline(device) == 1) {
-        
+    if (is_device_offline(c, device) == 1) {
+        // 检测掉线设备。
+        element_t *element = NULL;
         if (device->DO.first != NULL) {
-#ifdef WIN32
-			element = (element_t*)(device->DO.first) ; 
-#else
             element = list_entry_safe(device->DO.first, element_t);
-#endif
         } else if (device->DI.first != NULL) {
-#ifdef WIN32
-			element = (element_t*)(device->DI.first) ; 
-#else
             element = list_entry_safe(device->DI.first, element_t);
-#endif
         } else if (device->INPUT.first != NULL) {
-#ifdef WIN32
-			element = (element_t*)(device->INPUT.first) ; 
-#else
             element = list_entry_safe(device->INPUT.first, element_t);
-#endif
         } else if (device->HOLD.first != NULL) {
-#ifdef WIN32
-			element = (element_t*)(device->HOLD.first) ; 
-#else
             element = list_entry_safe(device->HOLD.first, element_t);
-#endif
         }
         if (element != NULL) {
             exec_single_element_read(c, device, element);
-            if (is_device_offline(device) == 1) {
+            if (is_device_offline(c, device) == 1) {
 #ifdef WIN32
                 device->next_update = device->next_update - (unsigned __int64)device->refresh_ms + c->retry_delay_ms;
 #else
                 device->next_update = device->next_update - (unsigned long long)device->refresh_ms + c->retry_delay_ms;
 #endif
             } else {
+                // 新上线设备。
+                list_node_t *reg_node = NULL;
+                // 读取全部寄存器。
                 if (c->ctx_thread_running != 0)
                 {
                     exec_one_list_read(c, device, &device->DO);
@@ -361,17 +301,13 @@ static inline void exec_one_device_read(context_t *c, device_t *device)
                 {
                     exec_one_list_read(c, device, &device->HOLD);
                 }
+                // 更新写入数据。
                 reg_node = device->DO.first;
-                // while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
-                while (reg_node != NULL) {
-#ifdef WIN32
-					element = (element_t*)(reg_node) ; 
-#else
+                while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
                     element = list_entry_safe(reg_node, element_t);
-#endif
                     if (element->err_cnt == 0 && element->is_force_update == 1) {
-                        devid = device->addr;
-                        address = element->addr;
+                        unsigned char devid = device->addr;
+                        unsigned short address = element->addr;
                         modbus_set_slave(c->ctx_modbus, devid);
                         modbus_write_bit(c->ctx_modbus, address - 1, element->val_w);
                         element->is_force_update = 0;
@@ -379,22 +315,18 @@ static inline void exec_one_device_read(context_t *c, device_t *device)
                     reg_node = reg_node->next;
                 }
                 reg_node = device->HOLD.first;
-                // while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
-                while (reg_node != NULL) {
-#ifdef WIN32
-					element = (element_t*)(reg_node) ; 
-#else
+                while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
                     element = list_entry_safe(reg_node, element_t);
-#endif
                     if (element->err_cnt == 0 && element->is_force_update == 1) {
-                        devid = device->addr;
-                        address = element->addr;
+                        unsigned char devid = device->addr;
+                        unsigned short address = element->addr;
                         modbus_set_slave(c->ctx_modbus, devid);
                         modbus_write_register(c->ctx_modbus, address - 40001, element->val_w);
                         element->is_force_update = 0;
                     }
                     reg_node = reg_node->next;
                 }
+                // 更新计数。
 #ifdef WIN32
                 device->next_update = get_tick_ms() + (unsigned __int64)device->refresh_ms;
 #else
@@ -407,9 +339,9 @@ static inline void exec_one_device_read(context_t *c, device_t *device)
     }
 
 #ifdef WIN32
-    delta = get_tick_ms();
+    unsigned __int64 delta = get_tick_ms();
 #else
-    delta = get_tick_ms();
+    unsigned long long delta = get_tick_ms();
 #endif
     if (c->ctx_thread_running != 0)
     {
@@ -428,8 +360,7 @@ static inline void exec_one_device_read(context_t *c, device_t *device)
         exec_one_list_read(c, device, &device->HOLD);
     }
 
-    // if (is_device_offline(c, device) == 1) {
-    if (is_device_offline(device) == 1) {
+    if (is_device_offline(c, device) == 1) {
 #ifdef WIN32
         device->next_update = device->next_update - (unsigned __int64)device->refresh_ms + c->retry_delay_ms;
 #else
@@ -437,6 +368,7 @@ static inline void exec_one_device_read(context_t *c, device_t *device)
 #endif
         device->spent_time_ms = 0;
     } else {
+        // 统计设备消费时间。
         delta = get_tick_ms() - delta;
         device->spent_time_ms = (unsigned int)delta;
     }
@@ -448,13 +380,6 @@ static unsigned int __stdcall thread_modbus_tcp_update(void* arg)
 static void* thread_modbus_tcp_update(void* arg)
 #endif
 {
-	element_t *element = NULL;
-	device_t* next_read_device = NULL;
-    list_node_t *dev_node = NULL;
-    device_t *device = NULL;
-	list_node_t *reg_node = NULL;
-	req_t *req = NULL;
-		
     context_t *c = (context_t *)arg;
 
     // wait for added event.
@@ -469,7 +394,7 @@ static void* thread_modbus_tcp_update(void* arg)
 
     while (c->ctx_thread_running != 0)
     {
-        next_read_device = get_next_read_device(c);
+        device_t* next_read_device = get_next_read_device(c);
         if (next_read_device != NULL) {
             exec_one_device_read(c, next_read_device);
         } else if (c->write_queue.len > 0) {
@@ -485,51 +410,31 @@ static void* thread_modbus_tcp_update(void* arg)
 
 #ifdef DEBUG_LIST
     {
-        dev_node = c->devices.first;
+        list_node_t *dev_node = c->devices.first;
         while (dev_node != NULL) {
-#ifdef WIN32
-			device = (device_t*)(dev_node) ; 
-#else
-			device = list_entry_safe(dev_node, device_t);
-#endif
+            device_t *device = list_entry_safe(dev_node, device_t);
             printf("Device [%d]\n", device->addr);
-            reg_node = device->DO.first;
-            while (reg_node != NULL) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+            list_node_t *reg_node = device->DO.first;
+            while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+                element_t *element = list_entry_safe(reg_node, element_t);
                 printf("  %d\n", element->addr);
                 reg_node = reg_node->next;
             }
             reg_node = device->DI.first;
-            while (reg_node != NULL) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+            while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+                element_t *element = list_entry_safe(reg_node, element_t);
                 printf("  %d\n", element->addr);
                 reg_node = reg_node->next;
             }
             reg_node = device->INPUT.first;
-            while (reg_node != NULL) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+            while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+                element_t *element = list_entry_safe(reg_node, element_t);
                 printf("  %d\n", element->addr);
                 reg_node = reg_node->next;
             }
             reg_node = device->HOLD.first;
-            while (reg_node != NULL) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+            while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+                element_t *element = list_entry_safe(reg_node, element_t);
                 printf("  %d\n", element->addr);
                 reg_node = reg_node->next;
             }
@@ -540,21 +445,13 @@ static void* thread_modbus_tcp_update(void* arg)
 
     // free device regs
     {
-        dev_node = list_get(&c->devices);
+        list_node_t *dev_node = list_get(&c->devices);
         while (dev_node) {
-#ifdef WIN32
-			device = (device_t*)(dev_node) ; 
-#else
-			device = list_entry_safe(dev_node, device_t);
-#endif
+            device_t *device = list_entry_safe(dev_node, device_t);
             // DO
-            reg_node = list_get(&device->DO);
+            list_node_t *reg_node = list_get(&device->DO);
             while (reg_node) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+                element_t *element = list_entry_safe(reg_node, element_t);
                 free(element);
 #ifdef DEBUG_LIST
                 mem_count--;
@@ -564,11 +461,7 @@ static void* thread_modbus_tcp_update(void* arg)
             // DI
             reg_node = list_get(&device->DI);
             while (reg_node) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+                element_t *element = list_entry_safe(reg_node, element_t);
                 free(element);
 #ifdef DEBUG_LIST
                 mem_count--;
@@ -578,11 +471,7 @@ static void* thread_modbus_tcp_update(void* arg)
             // INPUT
             reg_node = list_get(&device->INPUT);
             while (reg_node) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+                element_t *element = list_entry_safe(reg_node, element_t);
                 free(element);
 #ifdef DEBUG_LIST
                 mem_count--;
@@ -592,11 +481,7 @@ static void* thread_modbus_tcp_update(void* arg)
             // HOLD
             reg_node = list_get(&device->HOLD);
             while (reg_node) {
-#ifdef WIN32
-				element = (element_t*)(reg_node) ; 
-#else
-				element = list_entry_safe(reg_node, element_t);
-#endif
+                element_t *element = list_entry_safe(reg_node, element_t);
                 free(element);
 #ifdef DEBUG_LIST
                 mem_count--;
@@ -616,11 +501,7 @@ static void* thread_modbus_tcp_update(void* arg)
     if (c->write_queue.len) {
         list_node_t *node = list_get(&c->write_queue);
         while (node) {
-#ifdef WIN32
-			req = (req_t*)(node) ; 
-#else
-			req = list_entry_safe(node, req_t);
-#endif
+            req_t *req = list_entry_safe(node, req_t);
             free(req);
 #ifdef DEBUG_LIST
             mem_count--;
@@ -643,31 +524,21 @@ static void* thread_modbus_tcp_update(void* arg)
     return 0;
 #else
     pthread_exit(NULL);
+
     return (void*)NULL;
 #endif
 }
 
 int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
-    device_t *device = NULL;
-	element_t *next_element = NULL;
-	element_t *element = NULL;
-
-	float *p = NULL;
-
     // read device elapsed time.
     if (addr == 0) {
         context_t *c = &context_table[ctx_idx];
         list_node_t *dev_node = c->devices.first;
         while (dev_node != NULL) {
-#ifdef WIN32
-			device = (device_t*)(dev_node) ; 
-#else
-			device = list_entry_safe(dev_node, device_t);
-#endif
+            device_t *device = list_entry_safe(dev_node, device_t);
             if (device->addr == device_addr) {
-                // if (is_device_offline(c, device) == 1) {
-                if (is_device_offline(device) == 1) {
+                if (is_device_offline(c, device) == 1) {
                     return 0;
                 }
                 if (device->spent_time_ms > 65535) {
@@ -682,7 +553,7 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
         return 0;
     }
 
-    element = (element_t *)device_addr;
+    element_t *element = (element_t *)device_addr;
     if (element != NULL && element->addr == addr) {
         if (element->err_cnt == 0) {
             if (len == 1) {
@@ -698,11 +569,7 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 3) {
                 // dint
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
                     int data = 0;
                     if (element->endian != 0) {
@@ -718,11 +585,7 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 4) {
                 // dword
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
                     unsigned int data = 0;
                     if (element->endian != 0) {
@@ -736,11 +599,7 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 5) {
                 // real
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
                     unsigned int data = 0;
                     if (element->endian != 0) {
@@ -748,7 +607,7 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
                     } else {
                         data = (next_element->val << 16) | element->val;
                     }
-                    p = (float *)((char *)&data);
+                    float *p = (float *)((char *)&data);
                     buf[0] = *p;
                     return 2;
                 }
@@ -761,22 +620,14 @@ int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
 
 static inline void write_queue_put(int ctx_idx, element_t *element)
 {
-	device_t *curr_device = NULL;
-	element_t *curr_element = NULL;
-	req_t *_req = NULL;
     context_t *c = &context_table[ctx_idx];
-    list_head_t *reg_head = NULL;
-	list_node_t *req_node = NULL;
-    int is_exist = 0;
+
     // find the device.
     list_node_t *dev_node = c->devices.first;
     device_t *device = NULL;
     while (dev_node != NULL && device == NULL) {
-#ifdef WIN32
-		curr_device = (device_t*)(dev_node) ; 
-#else
-		curr_device = list_entry_safe(dev_node, device_t);
-#endif
+        device_t *curr_device = list_entry_safe(dev_node, device_t);
+        list_head_t *reg_head = NULL;
         if (element->addr > 0 && element->addr < 10000) {
             reg_head = &curr_device->DO;
         } else if (element->addr > 10000 && element->addr < 20000) {
@@ -788,12 +639,8 @@ static inline void write_queue_put(int ctx_idx, element_t *element)
         }
         if (reg_head != NULL) {
             list_node_t *reg_node = reg_head->first;
-            while (reg_node != NULL) {
-#ifdef WIN32
-				curr_element = (element_t*)(reg_node) ; 
-#else
-				curr_element = list_entry_safe(reg_node, element_t);
-#endif
+            while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+                element_t *curr_element = list_entry_safe(reg_node, element_t);
                 if (curr_element == element) {
                     device = curr_device;
                     break;
@@ -809,13 +656,10 @@ static inline void write_queue_put(int ctx_idx, element_t *element)
     }
 
     LOCK_WRITE_QUEUE;
-    req_node = c->write_queue.first;
+    list_node_t *req_node = c->write_queue.first;
+    int is_exist = 0;
     while (req_node != NULL) {
-#ifdef WIN32
-		_req = (req_t*)(req_node) ; 
-#else
-		_req = list_entry_safe(req_node, req_t);
-#endif
+        req_t *_req = list_entry_safe(req_node, req_t);
         if (_req->dev == device && _req->reg == element) {
             is_exist = 1;
             break;
@@ -839,18 +683,13 @@ static inline void write_queue_put(int ctx_idx, element_t *element)
 
 int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
-	element_t *next_element = NULL;
-	element_t *element =  NULL;
-	unsigned int data = 0;
-	unsigned int _data = 0;
-	short short_data = 0;
     int result = -1;
 
     if ((addr > 10000 && addr < 20000) || (addr > 30000 && addr < 40000)) {
         return result;
     }
 
-    element = (element_t *)device_addr;
+    element_t *element = (element_t *)device_addr;
     if (element != NULL && element->addr == addr) {
         if (addr < 20000) {
             if (buf[0] == 0) {
@@ -867,8 +706,8 @@ int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
         } else {
             if (len == 1) {
                 // int
-                short_data = (short)buf[0];
-                element->val_w = (unsigned short)short_data;
+                short data = (short)buf[0];
+                element->val_w = (unsigned short)data;
                 if (element->err_cnt != MAX_ERROR_COUNT) {
                     write_queue_put(ctx_idx, element);
                     result = 1;
@@ -888,19 +727,15 @@ int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 3) {
                 // dint
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
-                    data = (int)buf[0];
+                    int data = (int)buf[0];
                     if (element->endian != 0) {
-                        _data = (unsigned int)data;
+                        unsigned int _data = (unsigned int)data;
                         element->val_w = (_data >> 16) & 0xFFFF;
                         next_element->val_w = (_data & 0xFFFF);
                     } else {
-                        _data = (unsigned int)data;
+                        unsigned int _data = (unsigned int)data;
                         next_element->val_w = (_data >> 16) & 0xFFFF;
                         element->val_w = (_data & 0xFFFF);
                     }
@@ -916,13 +751,9 @@ int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 4) {
                 // dword
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
-                    data = (unsigned int)buf[0];
+                    unsigned int data = (unsigned int)buf[0];
                     if (element->endian != 0) {
                         element->val_w = (data >> 16) & 0xFFFF;
                         next_element->val_w = (data & 0xFFFF);
@@ -942,13 +773,9 @@ int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
             }
             if (len == 5) {
                 // real
-#ifdef WIN32
-				next_element = (element_t*)(element->node.next) ; 
-#else
-				next_element = list_entry_safe(element->node.next, element_t);
-#endif
+                element_t *next_element = list_entry_safe(element->node.next, element_t);
                 if (next_element != NULL && next_element->addr == addr + 1) {
-                    data = *((unsigned int *)buf);
+                    unsigned int data = *((unsigned int *)buf);
                     if (element->endian != 0) {
                         element->val_w = (data >> 16) & 0xFFFF;
                         next_element->val_w = (data & 0xFFFF);
@@ -974,33 +801,21 @@ int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
 
 static inline void list_ordered_put(list_head_t *head, element_t *element)
 {
-	element_t *first_elem = NULL;
-    list_node_t *prev = NULL;
-	list_node_t *reg_node = NULL;
-	element_t *next_elem = NULL;
-
     if (head->len == 0) {
         list_put(head, &element->node);
     } else {
-#ifdef WIN32
-		first_elem = (element_t*)(head->first) ; 
-#else
-		first_elem = list_entry_safe(head->first, element_t);
-#endif
+        element_t *first_elem = list_entry_safe(head->first, element_t);
         if (first_elem->addr > element->addr) {
             list_put_begin(head, &element->node);
         } else {
-            reg_node = head->first;
+            list_node_t *prev = NULL;
+            list_node_t *reg_node = head->first;
             while (reg_node != NULL) {
                 if (reg_node->next == NULL) {
                     prev = reg_node;
                     break;
                 }
-#ifdef WIN32
-				next_elem = (element_t*)(reg_node->next) ; 
-#else
-				next_elem = list_entry_safe(reg_node->next, element_t);
-#endif
+                element_t *next_elem = list_entry_safe(reg_node->next, element_t);
                 if (next_elem->addr > element->addr) {
                     prev = reg_node;
                     break;
@@ -1027,18 +842,6 @@ static inline void list_ordered_put(list_head_t *head, element_t *element)
 
 int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
 {
-	device_t *_device = NULL;
-	list_node_t *reg_node = NULL;
-	
-    int register_node_addr = 0;
-    int is_new_node = 1;
-    // search the list to check is the node is exist.
-    list_head_t *reg_head = NULL;
-
-    device_t *device = NULL;
-	list_node_t *dev_node = NULL;
-	element_t *element = NULL;
-
     context_t *c = &context_table[ctx_idx];
     int endian = (device_addr >> 8) & 0xFF;
     device_addr = device_addr & 0xFF;
@@ -1053,11 +856,7 @@ int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
         device_t *device = NULL;
         list_node_t *dev_node = c->devices.first;
         while (dev_node != NULL) {
-#ifdef WIN32
-			_device = (device_t*)(dev_node) ; 
-#else
-			_device = list_entry_safe(dev_node, device_t);
-#endif
+            device_t *_device = list_entry_safe(dev_node, device_t);
             if (_device->addr == device_addr) {
                 device = _device;
                 break;
@@ -1068,11 +867,7 @@ int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
             return -1;
         }
         // if not found, create it.
-#ifdef WIN32 
-		device = (device_t *)malloc(sizeof(device_t));
-#else
-		device = malloc(sizeof(device_t));
-#endif
+        device = (device_t *)malloc(sizeof(device_t));
         if (device == NULL) {
             return -1;
         }
@@ -1088,13 +883,10 @@ int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
 
     // add register node
     // find the device by device_addr
-    dev_node = c->devices.first;
+    device_t *device = NULL;
+    list_node_t *dev_node = c->devices.first;
     while (dev_node != NULL) {
-#ifdef WIN32
-		_device = (device_t*)(dev_node) ; 
-#else
-		_device = list_entry_safe(dev_node, device_t);
-#endif
+        device_t *_device = list_entry_safe(dev_node, device_t);
         if (_device->addr == device_addr) {
             device = _device;
             break;
@@ -1106,6 +898,10 @@ int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
         return 0;
     }
 
+    int register_node_addr = 0;
+    int is_new_node = 1;
+    // search the list to check is the node is exist.
+    list_head_t *reg_head = NULL;
     if (addr > 0 && addr < 10000) {
         reg_head = &device->DO;
     } else if (addr > 10000 && addr < 20000) {
@@ -1116,13 +912,9 @@ int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
         reg_head = &device->HOLD;
     }
     if (reg_head != NULL) {
-        reg_node = reg_head->first;
-        while (reg_node != NULL) {
-#ifdef WIN32
-			element = (element_t*)(reg_node) ; 
-#else
-			element = list_entry_safe(reg_node, element_t);
-#endif
+        list_node_t *reg_node = reg_head->first;
+        while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
+            element_t *element = list_entry_safe(reg_node, element_t);
             if (element->addr == addr) {
                 register_node_addr = (int)element;
                 is_new_node = 0;
@@ -1154,7 +946,6 @@ int tcp_open(char *ip, int port)
     int i;
     int ctx_idx = -1;
     context_t *c;
-	modbus_t* ctx = NULL;
 
     for (i=0; i<MAX_MODBUSTCPSLAVE_NUM; i++) {
         c = &context_table[i];
@@ -1173,7 +964,7 @@ int tcp_open(char *ip, int port)
         return -1;
     }
 
-    ctx = modbus_new_tcp(ip, port);
+    modbus_t* ctx = modbus_new_tcp(ip, port);
     if(ctx == NULL){
         printf("new tcp err !!! \n");
         return -1;
