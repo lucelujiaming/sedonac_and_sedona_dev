@@ -1,16 +1,15 @@
 #include "sedona.h"
 #include <stdio.h>
+#ifdef WIN32
+#include <io.h>
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#ifdef WIN32
-#else
-#include <unistd.h>
-#endif
-
-
-#define modbusDefaultRetCell  trueCell
 
 Cell ModBus_remDev_dRtuO(SedonaVM* vm, Cell* params)
 {
@@ -22,7 +21,6 @@ Cell ModBus_remDev_dRtuO(SedonaVM* vm, Cell* params)
     int retry_delay = params[6].ival;
     int rto = params[7].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int rtu_open(int ctx_idx, int band, int parity, int data_bit, int stop_bit, int retry_delay, int rto);
@@ -32,16 +30,12 @@ Cell ModBus_remDev_dRtuO(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dRtuC(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
 
-#ifndef WIN32
     Cell ret;
     {
 		printf("[%s:%s:%d] rtu_close %d\n",
@@ -53,9 +47,6 @@ Cell ModBus_remDev_dRtuC(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dRtuA(SedonaVM* vm, Cell* params)
@@ -67,7 +58,6 @@ Cell ModBus_remDev_dRtuA(SedonaVM* vm, Cell* params)
     int refreshms = params[5].ival;
     int pointdelay = params[6].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int rtu_add(int ctx_idx, int device_addr, int addr, int len, int refreshms, int reg_delay);
@@ -77,9 +67,6 @@ Cell ModBus_remDev_dRtuA(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dRtuR(SedonaVM* vm, Cell* params)
@@ -88,9 +75,8 @@ Cell ModBus_remDev_dRtuR(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+    float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -104,10 +90,6 @@ Cell ModBus_remDev_dRtuR(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    buf[0] = 1.0;
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dRtuW(SedonaVM* vm, Cell* params)
@@ -116,9 +98,8 @@ Cell ModBus_remDev_dRtuW(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -132,9 +113,6 @@ Cell ModBus_remDev_dRtuW(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dRtuO(SedonaVM* vm, Cell* params)
@@ -145,7 +123,6 @@ Cell ModBus_locDev_dRtuO(SedonaVM* vm, Cell* params)
     int data_bit = params[4].ival;
     int stop_bit = params[5].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int rtu_master_open(int ctx_idx, int band, int parity, int data_bit, int stop_bit);
@@ -155,16 +132,12 @@ Cell ModBus_locDev_dRtuO(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dRtuC(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
 
-#ifndef WIN32
     Cell ret;
     {
 		printf("[%s:%s:%d] rtu_master_close %d\n",
@@ -176,9 +149,6 @@ Cell ModBus_locDev_dRtuC(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dRtuA(SedonaVM* vm, Cell* params)
@@ -188,7 +158,6 @@ Cell ModBus_locDev_dRtuA(SedonaVM* vm, Cell* params)
     int addr = params[3].ival;
     int len = params[4].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int rtu_master_add(int ctx_idx, int device_addr, int addr, int len);
@@ -198,9 +167,6 @@ Cell ModBus_locDev_dRtuA(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dRtuR(SedonaVM* vm, Cell* params)
@@ -214,10 +180,9 @@ Cell ModBus_locDev_dRtuR(SedonaVM* vm, Cell* params)
     // printf("[%s:%s:%d] addr = %d \n",__FILE__, __FUNCTION__, __LINE__, addr);
     int len = params[4].ival;
     // printf("[%s:%s:%d] len = %d \n",__FILE__, __FUNCTION__, __LINE__, len);
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
     // printf("[%s:%s:%d] len = %f \n",__FILE__, __FUNCTION__, __LINE__, buf[0]);
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -232,10 +197,6 @@ Cell ModBus_locDev_dRtuR(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    buf[0] = 1.0;
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dRtuW(SedonaVM* vm, Cell* params)
@@ -244,9 +205,8 @@ Cell ModBus_locDev_dRtuW(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -260,17 +220,13 @@ Cell ModBus_locDev_dRtuW(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dTcpO(SedonaVM* vm, Cell* params)
 {
-    char *ip = params[1].aval;
+	char *ip = (char *)params[1].aval;
     int port = params[2].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int tcp_open(char *ip, int port);
@@ -280,16 +236,12 @@ Cell ModBus_remDev_dTcpO(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dTcpC(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int tcp_close(int ctx_idx);
@@ -301,9 +253,6 @@ Cell ModBus_remDev_dTcpC(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dTcpA(SedonaVM* vm, Cell* params)
@@ -314,7 +263,6 @@ Cell ModBus_remDev_dTcpA(SedonaVM* vm, Cell* params)
     int len = params[4].ival;
     int refreshms = params[5].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms);
@@ -324,9 +272,6 @@ Cell ModBus_remDev_dTcpA(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dTcpR(SedonaVM* vm, Cell* params)
@@ -335,9 +280,8 @@ Cell ModBus_remDev_dTcpR(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -351,10 +295,6 @@ Cell ModBus_remDev_dTcpR(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    buf[0] = 1.0;
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_remDev_dTcpW(SedonaVM* vm, Cell* params)
@@ -363,9 +303,8 @@ Cell ModBus_remDev_dTcpW(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -379,16 +318,12 @@ Cell ModBus_remDev_dTcpW(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dTcpO(SedonaVM* vm, Cell* params)
 {
     int port = params[1].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int tcp_master_open(int port);
@@ -398,16 +333,12 @@ Cell ModBus_locDev_dTcpO(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dTcpC(SedonaVM* vm, Cell* params)
 {
     int ctx_idx = params[1].ival;
 
-#ifndef WIN32
     Cell ret;
     {
 		printf("[%s:%s:%d] tcp_master_close %d\n",
@@ -419,9 +350,6 @@ Cell ModBus_locDev_dTcpC(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dTcpA(SedonaVM* vm, Cell* params)
@@ -431,17 +359,15 @@ Cell ModBus_locDev_dTcpA(SedonaVM* vm, Cell* params)
     int addr = params[3].ival;
     int len = params[4].ival;
 
-#ifndef WIN32
     Cell ret;
     {
         extern int tcp_master_add(int ctx_idx, int device_addr, int addr, int len);
         ret.ival = tcp_master_add(ctx_idx, device_addr, addr, len);
+		printf("[%s:%s:%d] return %d\n",
+                 __FILE__, __FUNCTION__, __LINE__, ret.ival);
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dTcpR(SedonaVM* vm, Cell* params)
@@ -452,9 +378,8 @@ Cell ModBus_locDev_dTcpR(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
     // int i = 0 ;
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
@@ -475,10 +400,6 @@ Cell ModBus_locDev_dTcpR(SedonaVM* vm, Cell* params)
     }
 
     return ret;
-#else
-    buf[0] = 1.0;
-    return modbusDefaultRetCell;
-#endif
 }
 
 Cell ModBus_locDev_dTcpW(SedonaVM* vm, Cell* params)
@@ -487,21 +408,19 @@ Cell ModBus_locDev_dTcpW(SedonaVM* vm, Cell* params)
     int device_addr = params[2].ival;
     int addr = params[3].ival;
     int len = params[4].ival;
-    float *buf = params[5].aval;
+	float *buf = (float *)params[5].aval;
 
-#ifndef WIN32
     Cell ret;
     ret.ival = -1;
     if (len > 0) {
         extern int tcp_master_write(int ctx_idx, int device_addr, int addr, float *buf, int len);
         int result = tcp_master_write(ctx_idx, device_addr, addr, buf, len);
+		printf("[%s:%s:%d] return %d\n",
+                 __FILE__, __FUNCTION__, __LINE__, result);
         if (result > 0) {
             ret.ival = result;
         }
     }
 
     return ret;
-#else
-    return modbusDefaultRetCell;
-#endif
 }

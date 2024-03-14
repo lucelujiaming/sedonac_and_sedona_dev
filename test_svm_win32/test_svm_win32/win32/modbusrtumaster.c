@@ -1,36 +1,28 @@
 // #include "modbus.h"
-#include "modbus-tcp.h"
 #include "modbus-rtu.h"
+#include "modbus-tcp.h"
 
 #ifdef WIN32
-# include <windows.h>
-#include <time.h>
-#include <io.h>
+#include <windows.h>
+#include <math.h>
 #include <process.h>
 #else
-#include <unistd.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <pthread.h>
 #endif
-#include "board.h"
-#include "list.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
 
-#pragma warning( disable : 4996) 
+#include "board.h"
+#include "list.h"
 
-#ifdef WIN32
-extern unsigned __int64 get_tick_ms(void);
-#else
-extern unsigned long long get_tick_ms(void);
-#endif
+#define MODBUS_READ_BLOCK_SIZE 64
 
-#define MODBUS_MAX_CLIENT 6
-#define MODBUS_TCP_TIMOUT 5000
-#define MODBUS_READ_BLOCK_SIZE 120
+#pragma comment(lib, "ws2_32.lib")
 
 //#define DEBUG_LIST
 #ifdef DEBUG_LIST
@@ -58,33 +50,18 @@ typedef struct
 {
     modbus_t *ctx_modbus;
 #ifdef WIN32
-	HANDLE ctx_thread;
+    HANDLE ctx_thread;
 #else
-	pthread_t ctx_thread;
+    pthread_t ctx_thread;
 #endif
     unsigned char ctx_thread_running;
     unsigned char ctx_added;
 
-#ifdef WIN32
-    HANDLE ctx_sub_thread[MODBUS_MAX_CLIENT];
-#else
-    pthread_t ctx_sub_thread[MODBUS_MAX_CLIENT];
-#endif
-    unsigned char ctx_sub_thread_running[MODBUS_MAX_CLIENT];
-#ifdef WIN32
-    unsigned __int64 ctx_sub_thread_last_update[MODBUS_MAX_CLIENT];
-#else
-    unsigned long long ctx_sub_thread_last_update[MODBUS_MAX_CLIENT];
-#endif
-
-    int curr_fd;
-    int curr_idx;
-
     list_head_t devices; // list of device_t
 } context_t;
-static context_t context_table[MAX_MODBUSTCPMASTER_NUM];
+static context_t context_table[MAX_MODBUSRTU_NUM];
 
-static inline element_t* get_element(context_t *c, unsigned char devid, unsigned short addr, int len)
+static __inline element_t* get_element(context_t *c, unsigned char devid, unsigned short addr, int len)
 {
     device_t *device = NULL;
     list_node_t *dev_node = c->devices.first;
@@ -135,50 +112,57 @@ static inline element_t* get_element(context_t *c, unsigned char devid, unsigned
     return NULL;
 }
 
-#define MODBUS_TCP_MAX_ADU_LENGTH  260
 #ifdef WIN32
-static unsigned int __stdcall thread_modbus_tcp(void *arg)
+static unsigned int __stdcall thread_modbus_rtu_master(void *arg)
 #else
-static void* thread_modbus_tcp(void *arg)
+static void* thread_modbus_rtu_master(void *arg)
 #endif
 {
     context_t *c = (context_t *)arg;
-    int idx = c->curr_idx;
-    int fd = c->curr_fd;
-    unsigned char query[MODBUS_TCP_MAX_ADU_LENGTH];
     int header_length = modbus_get_header_length(c->ctx_modbus);
-    c->ctx_sub_thread_last_update[idx] = get_tick_ms();
+    unsigned char query[MODBUS_RTU_MAX_ADU_LENGTH];
 
-    if (fd > 0) {
-        while (c->ctx_sub_thread_running[idx] != 0 && get_tick_ms() - c->ctx_sub_thread_last_update[idx] < MODBUS_TCP_TIMOUT) {
-            int s_rc;
-            struct timeval tv;
-            fd_set rset;
+    // wait for added event.
+    while (c->ctx_thread_running != 0 && c->ctx_added == 0)
+    {
+#ifdef WIN32
+		Sleep(10);
+#else
+        usleep(10*1000);
+#endif
+    }
+
+    // main loop.
+    while (c->ctx_thread_running != 0)
+    {
+        if (modbus_connect(c->ctx_modbus) == -1) {
+            continue;
+        }
+
+        while (c->ctx_thread_running != 0) {
             int rc = 0;
             do {
+                int s_rc;
+                fd_set rset;
+                struct timeval tv;
+                FD_ZERO(&rset);
+                FD_SET(modbus_get_socket(c->ctx_modbus), &rset);
                 tv.tv_sec = 1;
                 tv.tv_usec = 0;
-                FD_ZERO(&rset);
-                FD_SET(fd, &rset);
-                s_rc = select(fd+1, &rset, NULL, NULL, &tv);
+                s_rc = select(modbus_get_socket(c->ctx_modbus)+1, &rset, NULL, NULL, &tv);
                 if (s_rc > 0) {
-                    modbus_set_socket(c->ctx_modbus, fd);
                     rc = modbus_receive(c->ctx_modbus, query);
                 }
-            } while (rc == 0 && c->ctx_sub_thread_running[idx] != 0 && get_tick_ms() - c->ctx_sub_thread_last_update[idx] < MODBUS_TCP_TIMOUT);
+            } while (rc == 0 && c->ctx_thread_running != 0);
 
-            if (get_tick_ms() - c->ctx_sub_thread_last_update[idx] >= MODBUS_TCP_TIMOUT) {
+            if (rc == -1 || c->ctx_thread_running == 0) {
                 break;
             }
-
-            if (rc < 0 || c->ctx_sub_thread_running[idx] == 0) {
-                break;
-            }
-
-            c->ctx_sub_thread_last_update[idx] = get_tick_ms();
 
             // get a new query.
-            unsigned char devid = query[6];
+            int ctx_idx = c - &context_table[0];
+            led_blink(ctx_idx);
+            unsigned char devid = query[0];
             unsigned char function = query[header_length];
             unsigned short addr = (query[header_length+1]<<8) + query[header_length+2];
             unsigned short nb = (query[header_length + 3] << 8) + query[header_length + 4];
@@ -296,10 +280,11 @@ static void* thread_modbus_tcp(void *arg)
                 }
             }
 
-            modbus_set_socket(c->ctx_modbus, fd);
             rc = modbus_reply(c->ctx_modbus, query, rc, &modbus_mapping);
+            led_blink(ctx_idx);
 
             if (rc == -1) {
+                led_blink(MAX_MODBUSRTU_NUM + ctx_idx);
                 break;
             }
 
@@ -359,93 +344,6 @@ static void* thread_modbus_tcp(void *arg)
                         }
                 }
             } // end write feadback.
-        }
-    }
-
-    close(fd);
-    c->ctx_sub_thread_running[idx] = 0;
-
-#ifdef WIN32
-	return 0;
-#else
-    pthread_exit(NULL);
-
-    return (void*)NULL;
-#endif
-}
-
-#ifdef WIN32
-static unsigned int __stdcall thread_modbus_tcp_master(void *arg)
-#else
-static void* thread_modbus_tcp_master(void *arg)
-#endif
-{
-    context_t *c = (context_t *)arg;
-    int socket_fd = modbus_tcp_listen(c->ctx_modbus, 1);
-
-    // wait for added event.
-    while (c->ctx_thread_running != 0 && c->ctx_added == 0)
-    {
-#ifdef WIN32
-		Sleep(10); 
-#else
-		usleep(10*1000);
-#endif
-    }
-
-    // main loop.
-    while (c->ctx_thread_running != 0 && socket_fd != -1)
-    {
-        int s_rc;
-        struct timeval tv;
-        fd_set rset;
-        do {
-            tv.tv_sec = 1;
-            tv.tv_usec = 0;
-            FD_ZERO(&rset);
-            FD_SET(socket_fd, &rset);
-            s_rc = select(socket_fd+1, &rset, NULL, NULL, &tv);
-            if (s_rc > 0) {
-                s_rc = modbus_tcp_accept(c->ctx_modbus, &socket_fd);
-                if (s_rc == -1) {
-                    continue;
-                }
-            }
-        } while (s_rc <= 0 && c->ctx_thread_running != 0);
-
-        if (s_rc > 0) {
-            int i;
-            int has_port = 0;
-            for (i=0; i<MODBUS_MAX_CLIENT; i++) {
-                if (c->ctx_sub_thread_running[i] == 0) {
-                    c->ctx_sub_thread_running[i] = 1;
-                    c->curr_idx = i;
-                    c->curr_fd = s_rc;
-#ifdef WIN32
-					c->ctx_sub_thread[i] =
-						(HANDLE)_beginthreadex(NULL, 0, thread_modbus_tcp, c, 0, NULL);
-#else
-                    pthread_create(&c->ctx_sub_thread[i], NULL, thread_modbus_tcp, c);
-#endif // WIN32
-                    has_port = 1;
-                    break;
-                }
-            }
-            if (has_port == 0) {
-                close(s_rc);
-            }
-        }
-
-        int i;
-        for (i=0; i<MODBUS_MAX_CLIENT; i++) {
-            if (get_tick_ms() - c->ctx_sub_thread_last_update[i] >= MODBUS_TCP_TIMOUT && c->ctx_sub_thread_running[i] == 1) {
-                c->ctx_sub_thread_running[i] = 0;
-#ifdef WIN32
-				CloseHandle( c->ctx_sub_thread[i] );  
-#else
-                pthread_join(c->ctx_sub_thread[i], NULL);
-#endif // WIN32
-            }
         }
     }
 
@@ -544,24 +442,6 @@ static void* thread_modbus_tcp_master(void *arg)
 
     c->ctx_added = 0;
 
-    {
-        int i;
-        for (i=0; i<MODBUS_MAX_CLIENT; i++) {
-            if (c->ctx_sub_thread_running[i] == 1) {
-                c->ctx_sub_thread_running[i] = 0;
-#ifdef WIN32
-				CloseHandle( c->ctx_sub_thread[i] );  
-#else
-                pthread_join(c->ctx_sub_thread[i], NULL);
-#endif // WIN32
-            }
-        }
-    }
-
-    if (socket_fd != -1) {
-        close(socket_fd);
-    }
-
     modbus_close(c->ctx_modbus);
     modbus_free(c->ctx_modbus);
     c->ctx_modbus = NULL;
@@ -570,12 +450,12 @@ static void* thread_modbus_tcp_master(void *arg)
 	return 0;
 #else
     pthread_exit(NULL);
-
     return (void*)NULL;
 #endif
+
 }
 
-extern "C" int tcp_master_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int rtu_master_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
     // read device elapsed time.
     if (addr == 0) {
@@ -636,7 +516,10 @@ extern "C" int tcp_master_read(int ctx_idx, int device_addr, int addr, float *bu
                 } else {
                     data = (next_element->val << 16) | element->val;
                 }
-                float * p = (float *)((char *)&data);
+                // float *p = (float *)(&data);
+                // buf[0] = *p;
+                // buf[0] = (float)data;
+				float *p = (float *)((char *)&data);
                 buf[0] = *p;
                 return 2;
             }
@@ -646,9 +529,8 @@ extern "C" int tcp_master_read(int ctx_idx, int device_addr, int addr, float *bu
     return -1;
 }
 
-extern "C" int tcp_master_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int rtu_master_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
-	element_t *next_element = NULL;
     int result = -1;
 
     element_t *element = (element_t *)device_addr;
@@ -725,7 +607,7 @@ extern "C" int tcp_master_write(int ctx_idx, int device_addr, int addr, float *b
     return result;
 }
 
-static inline void list_ordered_put(list_head_t *head, element_t *element)
+static __inline void list_ordered_put(list_head_t *head, element_t *element)
 {
     if (head->len == 0) {
         list_put(head, &element->node);
@@ -766,11 +648,14 @@ static inline void list_ordered_put(list_head_t *head, element_t *element)
 #endif
 }
 
-extern "C" int tcp_master_add(int ctx_idx, int device_addr, int addr, int len)
+int rtu_master_add(int ctx_idx, int device_addr, int addr, int len)
 {
     context_t *c = &context_table[ctx_idx];
     int endian = (device_addr >> 8) & 0xFF;
     device_addr = device_addr & 0xFF;
+
+    printf("[%s:%s:%d] log output\r\n",
+             __FILE__, __FUNCTION__, __LINE__);
 
     if (device_addr == 0 && addr == 0 && len == 0) {
         // add END.
@@ -793,7 +678,7 @@ extern "C" int tcp_master_add(int ctx_idx, int device_addr, int addr, int len)
             return -1;
         }
         // if not found, create it.
-        device = (device_t *)malloc(sizeof(device_t));
+		device = (device_t *)malloc(sizeof(device_t));
         if (device == NULL) {
             return -1;
         }
@@ -803,6 +688,7 @@ extern "C" int tcp_master_add(int ctx_idx, int device_addr, int addr, int len)
         memset(device, 0, sizeof(device_t));
         device->addr = device_addr;
         list_put(&c->devices, &device->node);
+        modbus_set_slave(c->ctx_modbus, device_addr);
         return 0;
     }
 
@@ -866,62 +752,75 @@ extern "C" int tcp_master_add(int ctx_idx, int device_addr, int addr, int len)
     return register_node_addr;
 }
 
-extern "C" int tcp_master_open(int port)
+int rtu_master_open(int ctx_idx, int band, int parity, int data_bit, int stop_bit)
 {
-    int i;
-    int ctx_idx = -1;
-    context_t *c;
+    char uart_name[32] = { 0 };
+    char parity_name[] = {'N', 'E', 'O'};
 
-    for (i=0; i<MAX_MODBUSTCPMASTER_NUM; i++) {
-        c = &context_table[i];
-        if (c->ctx_modbus == NULL && c->ctx_thread_running == 0) {
-            ctx_idx = i;
-            break;
+    printf("[%s:%s:%d] log output\r\n",
+             __FILE__, __FUNCTION__, __LINE__);
+
+    if (acquire_uart(ctx_idx, uart_name) >= 0) {
+        context_t *c = &context_table[ctx_idx];
+
+        if (c->ctx_modbus != NULL || c->ctx_thread_running != 0){
+            release_uart(ctx_idx);
+            return -1;
         }
-    }
 
-    if (ctx_idx < 0 || ctx_idx >= MAX_MODBUSTCPMASTER_NUM) {
-        return -1;
-    }
+        modbus_t* ctx = modbus_new_rtu(uart_name, band, parity_name[parity], data_bit, stop_bit);
+        if (ctx == NULL) {
+            printf("new rtu err !!! \n");
+            release_uart(ctx_idx);
+            return -1;
+        }
 
-    c = &context_table[ctx_idx];
-    if (c->ctx_modbus != NULL || c->ctx_thread_running != 0) {
-        return -1;
-    }
+        modbus_set_response_timeout(ctx, 0, 500000);
+        int bto = 4000;
+        if (band <= 1200) { bto = 38000; }
+        else if (band <= 2400) { bto = 20000; }
+        else if (band <= 4800) { bto = 10000; }
+        else if (band <= 9600) { bto = 6000; }
+        modbus_set_byte_timeout(ctx, 0, bto);
+        modbus_set_debug(ctx, FALSE);
+		modbus_set_error_recovery(ctx, 
+			(modbus_error_recovery_mode)(MODBUS_ERROR_RECOVERY_LINK | 
+		                                 MODBUS_ERROR_RECOVERY_PROTOCOL));
+        //modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_NONE);
+        //modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
+        //modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_DOWN);
+        //modbus_rtu_set_rts_delay(ctx, 10000);
 
-    modbus_t* ctx = modbus_new_tcp(NULL, port);
-    if (ctx == NULL) {
-        printf("new tcp err !!! \n");
-        return -1;
-    }
+        c->ctx_modbus = ctx;
+        memset(&c->devices, 0, sizeof(list_head_t));
 
-    modbus_set_debug(ctx, FALSE);
-	modbus_set_error_recovery(ctx, 
-		(modbus_error_recovery_mode)(MODBUS_ERROR_RECOVERY_LINK | 
-		                             MODBUS_ERROR_RECOVERY_PROTOCOL));
-
-    c->ctx_modbus = ctx;
-    memset(&c->devices, 0, sizeof(list_head_t));
-
-    c->ctx_thread_running = 1;
+        c->ctx_thread_running = 1;
 #ifdef WIN32
 		c->ctx_thread =
-			(HANDLE)_beginthreadex(NULL, 0, thread_modbus_tcp_master, c, 0, NULL);
+			(HANDLE)_beginthreadex(NULL, 0, thread_modbus_rtu_master, c, 0, NULL);
 #else
-		pthread_create(&c->ctx_thread, NULL, thread_modbus_tcp_master, c);
+        pthread_create(&c->ctx_thread, NULL, thread_modbus_rtu_master, c);
+        led_blink(ctx_idx);
 #endif // WIN32
 
-    return ctx_idx;
+        return ctx_idx;
+    }
+
+    return -1;
 }
 
-extern "C" int tcp_master_close(int ctx_idx)
+int rtu_master_close(int ctx_idx)
 {
     context_t *c = &context_table[ctx_idx];
     if (c->ctx_modbus == NULL || c->ctx_thread_running == 0) {
         return -1;
     }
 
+    printf("[%s:%s:%d] log output\r\n",
+             __FILE__, __FUNCTION__, __LINE__);
+
     c->ctx_thread_running = 0;
+	
 #ifdef WIN32
 	CloseHandle( c->ctx_thread );  
 #else
@@ -930,11 +829,13 @@ extern "C" int tcp_master_close(int ctx_idx)
 
     while (c->ctx_modbus != NULL) {
 #ifdef WIN32
-		Sleep(10); 
+        Sleep(10);
 #else
-		usleep(10*1000);
-#endif
+        usleep(10*1000);
+#endif // WIN32
     }
+
+    release_uart(ctx_idx);
 
     return 0;
 }

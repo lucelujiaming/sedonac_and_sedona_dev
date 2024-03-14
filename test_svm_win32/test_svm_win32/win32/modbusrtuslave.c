@@ -160,7 +160,7 @@ static device_t* get_next_read_device(context_t *c)
     return NULL;
 }
 
-static inline void exec_one_reg_write_from_list(context_t *c)
+static __inline void exec_one_reg_write_from_list(context_t *c)
 {
     if (c->ctx_thread_running != 0 && c->write_queue.len > 0) {
         LOCK_WRITE_QUEUE;
@@ -213,7 +213,7 @@ static inline void exec_one_reg_write_from_list(context_t *c)
     }
 }
 
-static inline void exec_mutli_element_write(context_t *c, device_t *device, element_t *start_element, int len)
+static __inline void exec_mutli_element_write(context_t *c, device_t *device, element_t *start_element, int len)
 {
     int ctx_idx = c - &context_table[0];
     unsigned char devid = device->addr;
@@ -404,7 +404,7 @@ static inline void exec_mutli_element_write(context_t *c, device_t *device, elem
     UNLOCK_WRITE_QUEUE;
 }
 
-static inline void exec_mutli_element_read(context_t *c, device_t *device, element_t *start_element, int len)
+static __inline void exec_mutli_element_read(context_t *c, device_t *device, element_t *start_element, int len)
 {
     int ctx_idx = c - &context_table[0];
     unsigned char devid = device->addr;
@@ -637,7 +637,7 @@ static inline void exec_mutli_element_read(context_t *c, device_t *device, eleme
     }
 }
 
-static inline void exec_single_element_write(context_t *c, device_t *device, element_t *element)
+static __inline void exec_single_element_write(context_t *c, device_t *device, element_t *element)
 {
     int ctx_idx = c - &context_table[0];
     unsigned char devid = device->addr;
@@ -693,7 +693,7 @@ static inline void exec_single_element_write(context_t *c, device_t *device, ele
     }
 }
 
-static inline void exec_single_element_read(context_t *c, device_t *device, element_t *element)
+static __inline void exec_single_element_read(context_t *c, device_t *device, element_t *element)
 {
     int ctx_idx = c - &context_table[0];
     unsigned char devid = device->addr;
@@ -782,7 +782,7 @@ static inline void exec_single_element_read(context_t *c, device_t *device, elem
     device->packet_cnt_total ++;
 }
 
-static inline void exec_one_list_read(context_t *c, device_t *device, list_head_t *list)
+static __inline void exec_one_list_read(context_t *c, device_t *device, list_head_t *list)
 {
     list_node_t *curr = list->first;
     list_node_t *start = curr;
@@ -839,7 +839,7 @@ static inline void exec_one_list_read(context_t *c, device_t *device, list_head_
     }
 }
 
-static inline int is_device_offline(device_t *device)
+static __inline int is_device_offline(device_t *device)
 {
     list_node_t *reg_node = device->DO.first;
     while (reg_node != NULL) {
@@ -868,7 +868,7 @@ static inline int is_device_offline(device_t *device)
     return 1;
 }
 
-static inline void exec_one_device_read(context_t *c, device_t *device)
+static __inline void exec_one_device_read(context_t *c, device_t *device)
 {
     if (is_device_offline(device) == 1) {
         // 检测掉线设备。
@@ -1157,7 +1157,7 @@ static void* thread_modbus_rtu_update(void *arg)
 #endif
 }
 
-extern "C" int rtu_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int rtu_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
     // read device elapsed time.
     if (addr == 0) {
@@ -1255,7 +1255,7 @@ extern "C" int rtu_read(int ctx_idx, int device_addr, int addr, float *buf, int 
     return -1;
 }
 
-static inline void write_queue_put(int ctx_idx, element_t *element)
+static __inline void write_queue_put(int ctx_idx, element_t *element)
 {
     context_t *c = &context_table[ctx_idx];
 
@@ -1318,7 +1318,7 @@ static inline void write_queue_put(int ctx_idx, element_t *element)
     UNLOCK_WRITE_QUEUE;
 }
 
-extern "C" int rtu_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int rtu_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
     int result = -1;
 
@@ -1445,7 +1445,7 @@ extern "C" int rtu_write(int ctx_idx, int device_addr, int addr, float *buf, int
     return result;
 }
 
-static inline void list_ordered_put(list_head_t *head, element_t *element)
+static __inline void list_ordered_put(list_head_t *head, element_t *element)
 {
     if (head->len == 0) {
         list_put(head, &element->node);
@@ -1486,7 +1486,7 @@ static inline void list_ordered_put(list_head_t *head, element_t *element)
 #endif
 }
 
-extern "C" int rtu_add(int ctx_idx, int device_addr, int addr, int len, int refreshms, int reg_delay)
+int rtu_add(int ctx_idx, int device_addr, int addr, int len, int refreshms, int reg_delay)
 {
     context_t *c = &context_table[ctx_idx];
     int endian = (device_addr >> 8) & 0xFF;
@@ -1591,7 +1591,7 @@ extern "C" int rtu_add(int ctx_idx, int device_addr, int addr, int len, int refr
     return register_node_addr;
 }
 
-extern "C" int rtu_open(int ctx_idx, int band, int parity, int data_bit, int stop_bit, int retry_delay, int rto)
+int rtu_open(int ctx_idx, int band, int parity, int data_bit, int stop_bit, int retry_delay, int rto)
 {
     char uart_name[32] = { 0 };
     char parity_name[] = {'N', 'E', 'O'};
@@ -1649,7 +1649,7 @@ extern "C" int rtu_open(int ctx_idx, int band, int parity, int data_bit, int sto
     return -1;
 }
 
-extern "C" int rtu_close(int ctx_idx)
+int rtu_close(int ctx_idx)
 {
     context_t *c = &context_table[ctx_idx];
     if (c->ctx_modbus == NULL || c->ctx_thread_running == 0) {

@@ -143,7 +143,7 @@ static device_t* get_next_read_device(context_t *c)
     return NULL;
 }
 
-static inline void exec_one_reg_write_from_list(context_t *c)
+static __inline void exec_one_reg_write_from_list(context_t *c)
 {
     if (c->ctx_thread_running != 0 && c->write_queue.len > 0) {
         LOCK_WRITE_QUEUE;
@@ -172,7 +172,7 @@ static inline void exec_one_reg_write_from_list(context_t *c)
     }
 }
 
-static inline void exec_single_element_read(context_t *c, device_t *device, element_t *element)
+static __inline void exec_single_element_read(context_t *c, device_t *device, element_t *element)
 {
     unsigned char devid = device->addr;
     unsigned short address = element->addr;
@@ -218,7 +218,7 @@ static inline void exec_single_element_read(context_t *c, device_t *device, elem
     }
 }
 
-static inline void exec_one_list_read(context_t *c, device_t *device, list_head_t *list)
+static __inline void exec_one_list_read(context_t *c, device_t *device, list_head_t *list)
 {
     list_node_t *curr = list->first;
     while (c->ctx_thread_running != 0 && curr != NULL) {
@@ -229,7 +229,7 @@ static inline void exec_one_list_read(context_t *c, device_t *device, list_head_
     }
 }
 
-static inline int is_device_offline(context_t *c, device_t *device)
+static __inline int is_device_offline(context_t *c, device_t *device)
 {
     list_node_t *reg_node = device->DO.first;
     while ((reg_node != NULL) && (c->ctx_thread_running != 0)) {
@@ -258,7 +258,7 @@ static inline int is_device_offline(context_t *c, device_t *device)
     return 1;
 }
 
-static inline void exec_one_device_read(context_t *c, device_t *device)
+static __inline void exec_one_device_read(context_t *c, device_t *device)
 {
     if (is_device_offline(c, device) == 1) {
         // 检测掉线设备。
@@ -528,7 +528,7 @@ static void* thread_modbus_tcp_update(void* arg)
 #endif
 }
 
-extern "C" int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
     // read device elapsed time.
     if (addr == 0) {
@@ -617,7 +617,7 @@ extern "C" int tcp_read(int ctx_idx, int device_addr, int addr, float *buf, int 
     return -1;
 }
 
-static inline void write_queue_put(int ctx_idx, element_t *element)
+static __inline void write_queue_put(int ctx_idx, element_t *element)
 {
     context_t *c = &context_table[ctx_idx];
 
@@ -680,7 +680,7 @@ static inline void write_queue_put(int ctx_idx, element_t *element)
     UNLOCK_WRITE_QUEUE;
 }
 
-extern "C" int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
+int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int len)
 {
     int result = -1;
 
@@ -798,7 +798,7 @@ extern "C" int tcp_write(int ctx_idx, int device_addr, int addr, float *buf, int
     return result;
 }
 
-static inline void list_ordered_put(list_head_t *head, element_t *element)
+static __inline void list_ordered_put(list_head_t *head, element_t *element)
 {
     if (head->len == 0) {
         list_put(head, &element->node);
@@ -839,7 +839,7 @@ static inline void list_ordered_put(list_head_t *head, element_t *element)
 #endif
 }
 
-extern "C" int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
+int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refreshms)
 {
     context_t *c = &context_table[ctx_idx];
     int endian = (device_addr >> 8) & 0xFF;
@@ -940,7 +940,7 @@ extern "C" int tcp_add(int ctx_idx, int device_addr, int addr, int len, int refr
     return register_node_addr;
 }
 
-extern "C" int tcp_open(char *ip, int port)
+int tcp_open(char *ip, int port)
 {
     int i;
     int ctx_idx = -1;
@@ -991,7 +991,7 @@ extern "C" int tcp_open(char *ip, int port)
     return ctx_idx;
 }
 
-extern "C" int tcp_close(int ctx_idx)
+int tcp_close(int ctx_idx)
 {
     int iRet = -1 ;
     context_t *c = &context_table[ctx_idx];
@@ -1001,30 +1001,32 @@ extern "C" int tcp_close(int ctx_idx)
 
     c->ctx_thread_running = 0;
 #ifdef WIN32
+	TerminateThread(c->ctx_thread, 0x00);
 	CloseHandle( c->ctx_thread );  
+
+	modbus_close(c->ctx_modbus);
+	modbus_free(c->ctx_modbus);
+	c->ctx_modbus = NULL;
+	c->ctx_thread_running = 0;
 #else
     // pthread_join(c->ctx_thread, NULL);
     // pthread_join can not work in the client mode.
-    iRet = pthread_cancel(c->ctx_thread);
+	iRet = pthread_cancel(c->ctx_thread);
+	if (iRet != 0)
+	{
+		while (c->ctx_modbus != NULL) {
+			usleep(10 * 1000);
+			printf("[%s:%s:%d] arrive \n", __FILE__, __FUNCTION__, __LINE__);
+		}
+	}
+	else
+	{
+		modbus_close(c->ctx_modbus);
+		modbus_free(c->ctx_modbus);
+		c->ctx_modbus = NULL;
+		c->ctx_thread_running = 0;
+	}
 #endif // WIN32
 
-    if(iRet != 0)
-    {
-        while (c->ctx_modbus != NULL) {
-            printf("[%s:%s:%d] arrive \n", __FILE__, __FUNCTION__, __LINE__);
- #ifdef WIN32
-		Sleep(10); 
-#else
-		usleep(10*1000);
-#endif
-        }
-    }
-    else 
-    {
-        modbus_close(c->ctx_modbus);
-        modbus_free(c->ctx_modbus);
-        c->ctx_modbus = NULL;
-        c->ctx_thread_running = 0;
-    }
     return 0;
 }
