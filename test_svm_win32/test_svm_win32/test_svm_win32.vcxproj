@@ -109,7 +109,7 @@
     <ClCompile Include="win32\sys_Sys_win32.c" />
     <ClCompile Include="win32\sys_Test.c" />
     <ClCompile Include="win32\sys_Type.c" />
-    <ClCompile Include="win32\utils.cpp" />
+    <ClCompile Include="win32\utils.c" />
     <ClCompile Include="win32\vm.c" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,7 @@
 #include <unistd.h>
 #endif
 
-#include <config.h>
+#include "config.h"
 
 #include "modbus-private.h"
 #include "modbus.h"

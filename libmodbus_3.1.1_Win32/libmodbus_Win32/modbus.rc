@@ -1,6 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "config.h"
+#include "libmodbus/config.h"
 #include "libmodbus/modbus-version.h"
 
 #define VERSTRING PACKAGE_VERSION
@@ -37,7 +37,7 @@ FILETYPE VFT_DLL
 # endif
 #endif
    VALUE "InternalName", "modbus.dll"
-   VALUE "LegalCopyright", "© See libmodbus.org"
+   VALUE "LegalCopyright", "?See libmodbus.org"
    VALUE "OriginalFilename", "modbus.dll"
    VALUE "ProductName", "libmodbus"
   }

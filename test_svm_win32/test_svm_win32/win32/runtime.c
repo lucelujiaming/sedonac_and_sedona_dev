@@ -1,6 +1,11 @@
 ﻿#include "sedona.h"
 #include <stdio.h>
+#ifdef WIN32
 #include <time.h>
+#else
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -48,32 +53,26 @@ typedef struct {
 
 static T_PERSIST ctx;
 
+#ifdef WIN32
 struct timeval
 {
     long tv_sec;     // 秒
     long tv_usec;    // 微秒
 };
-
-unsigned long long get_tick_ms(void)
-{
-    unsigned long long ret = 0;
-
-
-    return ret;
-}
+#endif
 
 static unsigned int get_persist_size(void)
 {
     unsigned int len = 4;
     list_node_t *_node = ctx.runhours.first;
     while (_node != NULL) {
-        T_RUNHOUR *hour = (T_RUNHOUR*)(_node) ; 
+        T_RUNHOUR *hour = list_entry_safe(_node, T_RUNHOUR);
         len += strlen(hour->name) + 1 + 4 + 2;
         _node = _node->next;
     }
     _node = ctx.setpoints.first;
     while (_node != NULL) {
-        T_SETPOINT *point = (T_SETPOINT*)(_node) ; 
+        T_SETPOINT *point = list_entry_safe(_node, T_SETPOINT);
         len += strlen(point->name) + 1 + 4;
         _node = _node->next;
     }
@@ -89,7 +88,7 @@ static unsigned char get_persist_checksum(void)
     sum ^= (ctx.setpoints.len >> 8) & 0xFF;
     list_node_t *_node = ctx.runhours.first;
     while (_node != NULL) {
-        T_RUNHOUR *hour = (T_RUNHOUR*)(_node) ; 
+        T_RUNHOUR *hour = list_entry_safe(_node, T_RUNHOUR);
         int i;
         for (i=0; i<strlen(hour->name); i++) {
             sum ^= (unsigned char)hour->name[i];
@@ -104,7 +103,7 @@ static unsigned char get_persist_checksum(void)
     }
     _node = ctx.setpoints.first;
     while (_node != NULL) {
-        T_SETPOINT *point = (T_SETPOINT*)(_node) ; 
+        T_SETPOINT *point = list_entry_safe(_node, T_SETPOINT);
         int i;
         for (i=0; i<strlen(point->name); i++) {
             sum ^= (unsigned char)point->name[i];
@@ -158,7 +157,7 @@ Cell sys_Runtime_load(SedonaVM* vm, Cell* params)
                                 unsigned char *p = data + 8;
                                 int i;
                                 for (i=0; i<runhour_len; i++) {
-                                    T_RUNHOUR *hour = malloc(sizeof(T_RUNHOUR)); 
+                                    T_RUNHOUR *hour = malloc(sizeof(T_RUNHOUR));
                                     if (hour != NULL && strlen((char *)p) < NAME_LEN - 1) {
                                         memset(hour, 0, sizeof(T_RUNHOUR));
                                         strcpy(hour->name, (char *)p);
@@ -281,7 +280,7 @@ Cell sys_Runtime_save(SedonaVM* vm, Cell* params)
                 // runhours
                 list_node_t *_node = ctx.runhours.first;
                 while (_node != NULL) {
-                    T_RUNHOUR *hour = (T_RUNHOUR*)(_node) ; 
+                    T_RUNHOUR *hour = list_entry_safe(_node, T_RUNHOUR);
                     int i;
                     for (i=0; i<strlen(hour->name); i++) {
                         *p++ = (unsigned char)hour->name[i];
@@ -297,7 +296,7 @@ Cell sys_Runtime_save(SedonaVM* vm, Cell* params)
                 }
                 _node = ctx.setpoints.first;
                 while (_node != NULL) {
-                    T_SETPOINT *point = (T_SETPOINT*)(_node) ; 
+                    T_SETPOINT *point = list_entry_safe(_node, T_SETPOINT);
                     int i;
                     for (i=0; i<strlen(point->name); i++) {
                         *p++ = (unsigned char)point->name[i];
@@ -338,7 +337,7 @@ Cell sys_Runtime_timeOpen(SedonaVM* vm, Cell* params)
     if (strlen(name) > 0 && strlen(name) < NAME_LEN) {
         list_node_t *_node = ctx.runhours.first;
         while (_node != NULL) {
-            T_RUNHOUR *hour = (T_RUNHOUR*)(_node) ; 
+            T_RUNHOUR *hour = list_entry_safe(_node, T_RUNHOUR);
             if (strcmp(hour->name, name) == 0) {
                 hour->refcnt++;
                 ret.ival = (int)hour;
@@ -390,7 +389,7 @@ static void update_runtime(void)
     {
         list_node_t *_node = ctx.runhours.first;
         while (_node != NULL) {
-            T_RUNHOUR *hour = (T_RUNHOUR*)(_node) ; 
+            T_RUNHOUR *hour = list_entry_safe(_node, T_RUNHOUR);
             if (hour->en != 0) {
                 hour->seconds ++;
                 if (hour->seconds == 3600) {
@@ -447,7 +446,7 @@ Cell sys_Runtime_dataOpen(SedonaVM* vm, Cell* params)
     if (strlen(name) > 0 && strlen(name) < NAME_LEN) {
         list_node_t *_node = ctx.setpoints.first;
         while (_node != NULL) {
-            T_SETPOINT *point = (T_SETPOINT*)(_node) ; 
+            T_SETPOINT *point = list_entry_safe(_node, T_SETPOINT);
             if (strcmp(point->name, name) == 0) {
                 point->refcnt++;
                 ret.ival = (int)point;
@@ -681,6 +680,10 @@ Cell sys_Runtime_mathExpt(SedonaVM* vm, Cell* params)
 }
 
 #include <fcntl.h>
+#ifndef WIN32
+#include <linux/rtc.h>
+#include <sys/ioctl.h>
+#endif
 
 #define RTC_DRV_NAME "/dev/rtc0"
 
@@ -720,7 +723,11 @@ static int getwday(int y, int m, int d)
     return (mday % 7);
 }
 
+#ifdef WIN32
 static int currecttime(struct tm * time)
+#else
+static int currecttime(struct rtc_time * time)
+#endif
 // mon, mday set yday.
 {
     int month_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -746,7 +753,11 @@ static int rtc_fd = -1;
 
 static void set_rtc(unsigned int date, unsigned int time)
 {
+#ifdef WIN32
     struct tm rtc_tm;
+#else
+    struct rtc_time rtc_tm;
+#endif
     rtc_tm.tm_year = (date >> 16) - 1900;
     rtc_tm.tm_mon = ((date >> 8) & 0xFF) - 1;
     rtc_tm.tm_mday = (date & 0xFF);
@@ -762,14 +773,76 @@ static void set_rtc(unsigned int date, unsigned int time)
     if (rtc_tm.tm_hour > 23) return;
     if (rtc_tm.tm_min > 59) return;
     if (rtc_tm.tm_sec > 59) return;
-    // ioctl(rtc_fd, RTC_SET_TIME, &rtc_tm);
+#ifndef WIN32
+    ioctl(rtc_fd, RTC_SET_TIME, &rtc_tm);
+#endif
 }
 
 int64_t sys_Runtime_now(SedonaVM* vm, Cell* params)
 {
-  int64_t time = 0;
+#ifdef WIN32
+	int64_t now_time = 0;
+	time_t nowtime;
+	time(&nowtime); //获取1970年1月1日0点0分0秒到现在经过的秒数
+	struct tm* tmDateTime = localtime(&nowtime);
+	now_time = ((tmDateTime->tm_year + 1900) << 8) + (tmDateTime->tm_mon + 1);
+	// printf("[%s:%s:%d] time = %lld\r\n", __FILE__, __FUNCTION__, __LINE__, (long long)time);
+	now_time = now_time << 32;
+	now_time = now_time + (tmDateTime->tm_mday << 24) +
+		(tmDateTime->tm_hour << 16) + (tmDateTime->tm_min << 8) + (tmDateTime->tm_sec);
+	return now_time;
+#else
+	int64_t time = 0;
+	// printf("[%s:%s:%d] time = %lld\r\n", __FILE__, __FUNCTION__, __LINE__, (long long)time);
+	if (rtc_fd == -1) {
+		rtc_fd = open(RTC_DRV_NAME, O_RDONLY);
+		// printf("[%s:%s:%d] time = %lld\r\n", __FILE__, __FUNCTION__, __LINE__, (long long)time);
+	}
+	if (rtc_fd != -1) {
+		struct rtc_time rtc_tm;
+		if (ioctl(rtc_fd, RTC_RD_TIME, &rtc_tm) != -1) {
+			if (currecttime(&rtc_tm) == 1) {
+			}
+			time = ((rtc_tm.tm_year + 1900) << 8) + (rtc_tm.tm_mon + 1);
+			// printf("[%s:%s:%d] time = %lld\r\n", __FILE__, __FUNCTION__, __LINE__, (long long)time);
+			time = time << 32;
+			time = time + (rtc_tm.tm_mday << 24) +
+				(rtc_tm.tm_hour << 16) + (rtc_tm.tm_min << 8) + (rtc_tm.tm_sec);
+			// Sync mstp_datetime and bip_datetime
+			{
+				extern unsigned int *get_mstp_datetimeptr(void);
+				extern unsigned int *get_bip_datetimeptr(void);
+				unsigned int *mstp_datetimeptr = get_mstp_datetimeptr();
+				unsigned int *bip_datetimeptr = get_bip_datetimeptr();
+				if (mstp_datetimeptr != NULL && mstp_datetimeptr[2] != 0 && mstp_datetimeptr[3] != 0) {
+					set_rtc(mstp_datetimeptr[2], mstp_datetimeptr[3]);
+					if (bip_datetimeptr != NULL) {
+						bip_datetimeptr[2] = 0;
+						bip_datetimeptr[3] = 0;
+					}
+					mstp_datetimeptr[2] = 0;
+					mstp_datetimeptr[3] = 0;
+				}
+				if (bip_datetimeptr != NULL && bip_datetimeptr[2] != 0 && bip_datetimeptr[3] != 0) {
+					set_rtc(bip_datetimeptr[2], bip_datetimeptr[3]);
+					bip_datetimeptr[2] = 0;
+					bip_datetimeptr[3] = 0;
+				}
+				if (mstp_datetimeptr != NULL) {
+					mstp_datetimeptr[0] = ((unsigned short)(rtc_tm.tm_year + 1900) << 16) | ((unsigned char)(rtc_tm.tm_mon + 1) << 8) | ((unsigned char)rtc_tm.tm_mday);
+					mstp_datetimeptr[1] = ((unsigned char)rtc_tm.tm_hour) << 16 | ((unsigned char)rtc_tm.tm_min) << 8 | ((unsigned char)rtc_tm.tm_sec);
+				}
+				if (bip_datetimeptr != NULL) {
+					bip_datetimeptr[0] = ((unsigned short)(rtc_tm.tm_year + 1900) << 16) | ((unsigned char)(rtc_tm.tm_mon + 1) << 8) | ((unsigned char)rtc_tm.tm_mday);
+					bip_datetimeptr[1] = ((unsigned char)rtc_tm.tm_hour) << 16 | ((unsigned char)rtc_tm.tm_min) << 8 | ((unsigned char)rtc_tm.tm_sec);
+				}
+			}
+		}
+	}
 
-  return time;
+	// printf("[%s:%s:%d] time = %lld\r\n", __FILE__, __FUNCTION__, __LINE__, (long long)time);
+	return time;
+#endif
 }
 
 Cell sys_Runtime_setTime(SedonaVM* vm, Cell* params)
@@ -780,7 +853,11 @@ Cell sys_Runtime_setTime(SedonaVM* vm, Cell* params)
       rtc_fd = open(RTC_DRV_NAME, O_RDONLY);
   }
   if (rtc_fd != -1) {
+#ifdef WIN32
       struct tm rtc_tm;
+#else
+      struct rtc_time rtc_tm;
+#endif
       int d = (int)((time >> 40) & 0xFFF);
       rtc_tm.tm_year = d - 1900;
       d = (int)((time >> 32) & 0xFF);
@@ -795,7 +872,9 @@ Cell sys_Runtime_setTime(SedonaVM* vm, Cell* params)
       rtc_tm.tm_sec = d;
       rtc_tm.tm_wday = getwday(rtc_tm.tm_year + 1900, rtc_tm.tm_mon + 1, rtc_tm.tm_mday);
       rtc_tm.tm_yday = getyday(rtc_tm.tm_year + 1900, rtc_tm.tm_mon + 1, rtc_tm.tm_mday);
-      // ioctl(rtc_fd, RTC_SET_TIME, &rtc_tm);
+#ifndef WIN32
+      ioctl(rtc_fd, RTC_SET_TIME, &rtc_tm);
+#endif
   }
 
   return nullCell;

@@ -1153,6 +1153,7 @@ static void* thread_modbus_rtu_update(void *arg)
 	return 0;
 #else
     pthread_exit(NULL);
+
     return (void*)NULL;
 #endif
 }

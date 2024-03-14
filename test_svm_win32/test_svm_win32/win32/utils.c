@@ -80,22 +80,18 @@ unsigned long long get_tick_ms(void)
 {
 #ifdef WIN32
     unsigned _int64 ret = 0;
-	unsigned _int64 s   = 0;
-	unsigned _int64 us  = 0;
 #else
     unsigned long long ret = 0;
-	unsigned long long s   = 0;
-	unsigned long long us  = 0;
 #endif
     struct timeval tv;
 
     if(sizeof(ret) == 8 && gettimeofday(&tv, NULL) == 0){
 #ifdef WIN32
-        s = (unsigned _int64)tv.tv_sec;
-        us = (unsigned _int64)tv.tv_usec;
+        unsigned _int64 s = (unsigned _int64)tv.tv_sec;
+        unsigned _int64 us = (unsigned _int64)tv.tv_usec;
 #else
-        s = (unsigned long long)tv.tv_sec;
-        us = (unsigned long long)tv.tv_usec;
+        unsigned long long s = (unsigned long long)tv.tv_sec;
+        unsigned long long us = (unsigned long long)tv.tv_usec;
 #endif
         ret = s * 1000 + us / 1000;
     }

@@ -119,8 +119,10 @@ static device_t* get_next_read_device(context_t *c)
     list_node_t *dev_node = c->devices.first;
     while (c->ctx_thread_running != 0 && dev_node != NULL) {
         device_t *device = list_entry_safe(dev_node, device_t);
-        if (device->next_update < next_tick)
-            next_tick = device->next_update;
+		if (device->next_update < next_tick)
+		{
+			next_tick = device->next_update;
+		}
         dev_node = dev_node->next;
     }
 
@@ -972,9 +974,9 @@ int tcp_open(char *ip, int port)
     modbus_set_response_timeout(ctx, 0, 500000);
     modbus_set_byte_timeout(ctx, 0, 100000);
     modbus_set_debug(ctx, FALSE);
-	modbus_set_error_recovery(ctx, 
+    modbus_set_error_recovery(ctx, 
 		(modbus_error_recovery_mode)(MODBUS_ERROR_RECOVERY_LINK |
-		                             MODBUS_ERROR_RECOVERY_PROTOCOL));
+						   MODBUS_ERROR_RECOVERY_PROTOCOL));
     modbus_rtu_set_rts_delay(ctx, 10000);
 
     c->ctx_modbus = ctx;

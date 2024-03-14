@@ -11,9 +11,9 @@
 
 #define TICKS_ROLLOVER 4294967296
 
-// static Str Sys.platformType()
+// static Str sys_Sys_platformType()
 Cell sys_Sys_platformType(SedonaVM* vm, Cell* params)
-{         
+{
   Cell result;
 
 #ifdef PLATFORM_TYPE
@@ -25,6 +25,17 @@ Cell sys_Sys_platformType(SedonaVM* vm, Cell* params)
   return result;
 }
 
+// static void Sys.sleep(Time t)
+Cell sys_Sys_sleep(SedonaVM* vm, Cell* params)
+{
+  int64_t ns = *(int64_t*)params;
+  int64_t ms = ns/1000000i64;
+  
+  if (ms <= 0) return nullCell;
+
+  Sleep(ms);
+  return nullCell;
+}
 // static long Sys.ticks()
 int64_t sys_Sys_ticks(SedonaVM* vm, Cell* params)
 {
@@ -60,18 +71,6 @@ int64_t sys_Sys_ticks(SedonaVM* vm, Cell* params)
 
   // milliseconds -> nanoseconds
   return total * 1000000i64;
-}
-
-// static void Sys.sleep(Time t)
-Cell sys_Sys_sleep(SedonaVM* vm, Cell* params)
-{
-  int64_t ns = *(int64_t*)params;
-  int64_t ms = ns/1000000i64;
-  
-  if (ms <= 0) return nullCell;
-
-  Sleep(ms);
-  return nullCell;
 }
 
 

@@ -17,7 +17,7 @@
 typedef int ssize_t;
 #endif
 // clang-format on
-#include <config.h>
+#include "config.h"
 #include <sys/types.h>
 
 #include "modbus.h"
