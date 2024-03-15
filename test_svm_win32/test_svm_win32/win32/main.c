@@ -126,7 +126,7 @@ static int runInPlatformMode()
         printf("-- Simulated hibernate --\n");       
       else
       {  
-        sys_Sys_sleep(NULL, (Cell*)&yieldNs); 
+        sys_Sys_sleep(NULL, (Cell*)((char *)&yieldNs)); 
         yieldNs = 0;
       }  
       
@@ -185,7 +185,7 @@ static int runInStandaloneMode(const char* filename, int vmArgc, char* vmArgv[])
     else
     { 
       printf("Simulate yield %lld ", yieldNs); 
-      sys_Sys_sleep(NULL, (Cell*)&yieldNs);   
+      sys_Sys_sleep(NULL, (Cell*)((char *)&yieldNs));   
       yieldNs = 0;   
     }
     result = vmResume(&vm);
@@ -314,9 +314,9 @@ static int printVersion()
 #endif
   printf("\n");
 #ifdef __QNX__
-  printf("Jiaming.Lu Sedona VM %s\n", VER(PLAT_BUILD_VERSION));
+  printf("Jiaming.lu(QNX) Sedona VM %s\n", VER(PLAT_BUILD_VERSION));
 #else
-  printf("Jiaming Sedona VM %s\n", PLAT_BUILD_VERSION);
+  printf("Lujiaming Sedona VM %s\n", PLAT_BUILD_VERSION);
 #endif
  
   printf("buildDate: %s %s\n", __DATE__, __TIME__);

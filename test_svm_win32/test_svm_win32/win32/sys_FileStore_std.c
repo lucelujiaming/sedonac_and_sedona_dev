@@ -236,7 +236,34 @@ Cell sys_FileStore_doOpen(SedonaVM* vm, Cell* params)
     }
   }
 
+
+#ifdef _WIN32
+  char  bufFilePath[1024];
+  char  bufPath[1024];
+  memset(bufFilePath, 0x00, 1024);
+  memset(bufPath, 0x00, 1024);
+  GetCurrentDirectoryA(1000, bufPath);
+  if (name[0] == '\/')
+  {
+	  sprintf(bufFilePath, "%s\\%s", bufPath, name + 1);
+  }
+  else
+  {
+	  sprintf(bufFilePath, "%s\\%s", bufPath, name);
+  }
+  for (int i = 0; i < strlen(bufFilePath); i++)
+  {
+	  if (bufFilePath[i] == '\/')
+	  {
+		  bufFilePath[i] = '\\';
+	  }
+  }
+  // printf("GetCurrentDirectory = %s\r\n", bufFilePath);
+
+  result.aval = fopen(bufFilePath, fopenMode);
+#else
   result.aval = fopen(name, fopenMode);
+#endif
 
   // DIAG
   if (result.aval==NULL)
