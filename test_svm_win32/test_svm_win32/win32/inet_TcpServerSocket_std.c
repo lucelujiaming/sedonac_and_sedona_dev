@@ -6,7 +6,9 @@
 //   22 Aug 06  Brian Frank  Creation
 //   08 May 07  Brian Frank  Port from C++ old Sedona
 //
-#pragma comment(lib,"ws2_32.lib")
+#ifdef WIN32
+#pragma comment(lib, "ws2_32.lib")
+#endif
 #include "inet_util_std.h"
 
 //

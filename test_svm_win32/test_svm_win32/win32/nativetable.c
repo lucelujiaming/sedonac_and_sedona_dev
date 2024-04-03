@@ -619,6 +619,54 @@ NativeMethod kitNatives4[] =
 };
 
 ////////////////////////////////////////////////////////////////
+// DataBase (kitId=9)
+////////////////////////////////////////////////////////////////
+
+Cell DB_MySQL_dO(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dI(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dD(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dU(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dS(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dE(SedonaVM* vm, Cell* params);
+
+Cell DB_MySQL_dC(SedonaVM* vm, Cell* params);
+
+// Redis
+Cell DB_Redis_dO(SedonaVM* vm, Cell* params);
+
+Cell DB_Redis_dG(SedonaVM* vm, Cell* params);
+
+Cell DB_Redis_dS(SedonaVM* vm, Cell* params);
+
+Cell DB_Redis_dE(SedonaVM* vm, Cell* params);
+
+Cell DB_Redis_dC(SedonaVM* vm, Cell* params);
+
+// native table for kit 9
+NativeMethod kitNatives9[] =
+{
+	// MySQL
+	DB_MySQL_dO,                    // 9::0
+	DB_MySQL_dI,                    // 9::1
+	DB_MySQL_dD,                    // 9::2
+	DB_MySQL_dU,                    // 9::3
+	DB_MySQL_dS,                    // 9::4
+	DB_MySQL_dE,                    // 9::5
+	DB_MySQL_dC,                    // 9::6
+	// Redis
+	DB_Redis_dO,                 // 9::7
+	DB_Redis_dG,                 // 9::8
+	DB_Redis_dS,                 // 9::9
+	DB_Redis_dE,                 // 9::10
+	DB_Redis_dC,                 // 9::11
+};
+
+////////////////////////////////////////////////////////////////
 // PID (kitId=10)
 ////////////////////////////////////////////////////////////////
 
@@ -657,7 +705,7 @@ NativeMethod* nativeTable[] =
   NULL,            // 6
   NULL,            // 7
   NULL,            // 8
-  NULL,            // 9
+  kitNatives9,     // 9
   kitNatives10,    // 10
 };
 
@@ -683,7 +731,15 @@ int isNativeIdValid(int kitId, int methodId)
       // jiaming.lu adjust it @03/20/2023
       // if (methodId >= 14) return 0;
       if (methodId >= 19) return 0;
-      else return kitNatives4[methodId] != NULL;
+	  else return kitNatives4[methodId] != NULL;
+	case 9:
+		if (methodId >= 12) 
+			return 0;
+		else
+		{
+			printf("methodId = %d \r\n", methodId);
+			return kitNatives9[methodId] != NULL;
+		}
     case 10:
       if (methodId >= 6) return 0;
       else return kitNatives10[methodId] != NULL;

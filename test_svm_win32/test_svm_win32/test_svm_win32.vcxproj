@@ -41,6 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Program Files (x86)\MySQL\MySQL Server 5.7\include;C:\redis-3.0\redis-3.0\deps\hiredis;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\MySQL\MySQL Server 5.7\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -53,6 +55,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -81,6 +84,8 @@
     <ClCompile Include="win32\bacnet.c" />
     <ClCompile Include="win32\board.c" />
     <ClCompile Include="win32\datetimeStd_DateTimeServiceStd.c" />
+    <ClCompile Include="win32\db_mysql.c" />
+    <ClCompile Include="win32\db_redis.c" />
     <ClCompile Include="win32\inet_Crypto_sha1.c" />
     <ClCompile Include="win32\inet_sha1.c" />
     <ClCompile Include="win32\inet_TcpServerSocket_std.c" />
@@ -98,6 +103,7 @@
     <ClCompile Include="win32\platformManifest.c" />
     <ClCompile Include="win32\platWin32_Win32PlatformService_win32.c" />
     <ClCompile Include="win32\runtime.c" />
+    <ClCompile Include="win32\stl_wrapper.cpp" />
     <ClCompile Include="win32\sys_Component.c" />
     <ClCompile Include="win32\sys_FileStore_std.c" />
     <ClCompile Include="win32\sys_File_std.c" />
@@ -124,12 +130,15 @@
     <ClInclude Include="win32\scode.h" />
     <ClInclude Include="win32\sedona.h" />
     <ClInclude Include="win32\sedonaPlatform.h" />
+    <ClInclude Include="win32\stl_wrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libmodbus_Win32.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="hiredis.lib" />
     <Library Include="libmodbus_Win32.lib" />
+    <Library Include="Win32_Interop.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

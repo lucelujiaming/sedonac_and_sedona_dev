@@ -997,7 +997,11 @@ int vmCall(SedonaVM* vm, uint16_t method, Cell* args, int argc)
       // store ref fields (variable width based on pointer size)
       Case StoreRefFieldU1: *(void**)(((uint8_t*)((sp-1)->aval)) + *(uint8_t *)(cp+1)) = sp->aval; sp -= 2; cp += 2; EndInstr;
       Case StoreRefFieldU2: *(void**)(((uint8_t*)((sp-1)->aval)) + *(uint16_t*)(cp+1)) = sp->aval; sp -= 2; cp += 3; EndInstr;
-      Case StoreRefFieldU4: *(void**)(((uint8_t*)((sp-1)->aval)) + *(uint32_t*)(cp+1)) = sp->aval; sp -= 2; cp += 5; EndInstr;
+      Case StoreRefFieldU4: 
+				*(void**)(((uint8_t*)((sp-1)->aval)) + *(uint32_t*)(cp+1)) = sp->aval; 
+				sp -= 2; 
+				cp += 5; 
+				EndInstr;
       Case StoreRefArray:   *(((void**)((sp-2)->aval)) + ((sp-1)->ival)) = sp->aval; sp -= 3; ++cp; EndInstr;
 
       // load inline

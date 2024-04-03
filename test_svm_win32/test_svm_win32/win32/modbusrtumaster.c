@@ -22,7 +22,9 @@
 
 #define MODBUS_READ_BLOCK_SIZE 64
 
+#ifdef WIN32
 #pragma comment(lib, "ws2_32.lib")
+#endif
 
 //#define DEBUG_LIST
 #ifdef DEBUG_LIST

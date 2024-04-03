@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="win32\bacnet.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\board.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\datetimeStd_DateTimeServiceStd.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_Crypto_sha1.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_sha1.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_TcpServerSocket_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_TcpSocket_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_UdpSocket_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\inet_util_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\main.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\modbus.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\modbusrtumaster.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\modbusrtuslave.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\modbustcpmaster.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\modbustcpslave.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\nativetable.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\pid_pos.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\platformManifest.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\platWin32_Win32PlatformService_win32.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\runtime.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Component.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_File_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_FileStore_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_PlatformService_win32.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_StdOutStream_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Str.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Sys.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Sys_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Sys_win32.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Test.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\sys_Type.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\utils.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\vm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\db_mysql.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\db_redis.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\stl_wrapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win32\board.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\errorcodes.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\inet_sha1.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\inet_util.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\list.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\modbus.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\modbus-tcp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\scode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\sedonaPlatform.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\inet_util_std.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\sedona.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\stl_wrapper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libmodbus_Win32.lib" />
+    <Library Include="hiredis.lib" />
+    <Library Include="Win32_Interop.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libmodbus_Win32.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{72fc3ccb-33a4-40ce-9d36-363157262d4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{f30bf288-eea3-45d3-927f-d059b2bd1490}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

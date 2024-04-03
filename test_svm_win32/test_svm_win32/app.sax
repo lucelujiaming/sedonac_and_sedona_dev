@@ -1,0 +1,91 @@
+<?xml version='1.0'?>
+<sedonaApp>
+<schema>
+  <kit name="sys" checksum="82791acf" />
+  <kit name="Arith" checksum="328fb4ad" />
+  <kit name="BacNet" checksum="6e62ebc8" />
+  <kit name="BitLogic" checksum="1e6750fe" />
+  <kit name="Compare" checksum="e68d30cf" />
+  <kit name="Convert" checksum="2e912cff" />
+  <kit name="Math" checksum="d98193da" />
+  <kit name="ModBus" checksum="8ebaf58b" />
+  <kit name="Other" checksum="cac8e575" />
+  <kit name="PID" checksum="b2629dbe" />
+  <kit name="Schedule" checksum="f1dcee26" />
+  <kit name="Timer" checksum="5703682d" />
+  <kit name="Variable" checksum="c930cb27" />
+  <kit name="WordOpr" checksum="1bfc4cc9" />
+  <kit name="inet" checksum="25648ba7" />
+  <kit name="platform" checksum="b8bbb7d8" />
+  <kit name="sox" checksum="397a84dd" />
+  <kit name="Database" checksum="788eb73" />
+</schema>
+<app>
+  <prop name="appName" val="CMP500"/>
+  <!-- /service -->
+  <comp name="service" id="1" type="sys::Folder">
+    <prop name="meta" val="33685505"/>
+    <!-- /service/plat -->
+    <comp name="plat" id="2" type="platform::UnixPlatformService">
+      <prop name="meta" val="16842753"/>
+    </comp>
+    <!-- /service/users -->
+    <comp name="users" id="3" type="sys::UserService">
+      <prop name="meta" val="268500993"/>
+      <!-- /service/users/admin -->
+      <comp name="admin" id="4" type="sys::User">
+        <prop name="cred" val="hE49ksThgAeLkWB3NUU1NWeDO54="/>
+        <prop name="perm" val="2147483647"/>
+        <prop name="prov" val="255"/>
+      </comp>
+    </comp>
+    <!-- /service/datetim -->
+    <comp name="datetim" id="5" type="Schedule::DateTime">
+      <prop name="meta" val="67633153"/>
+    </comp>
+    <!-- /service/sox -->
+    <comp name="sox" id="6" type="sox::SoxService">
+      <prop name="meta" val="503578625"/>
+    </comp>
+    <!-- /service/BIP -->
+    <comp name="BIP" id="8" type="BacNet::BIP">
+      <prop name="meta" val="319291393"/>
+      <!-- /service/BIP/VAV1003 -->
+      <comp name="VAV1003" id="21" type="BacNet::bacDevice">
+        <prop name="meta" val="16842753"/>
+        <prop name="InstanceNumber" val="1003"/>
+      </comp>
+      <!-- /service/BIP/bacLoca -->
+      <comp name="bacLoca" id="9" type="BacNet::bacLocalDevice">
+        <prop name="deviceName" val="FFFF"/>
+        <prop name="deviceInstance" val="12345"/>
+        <!-- /service/BIP/bacLoca/bacLoca -->
+        <comp name="bacLoca" id="10" type="Variable::bacLocalPresentValue">
+          <prop name="instanceNumber" val="5678"/>
+          <prop name="alias" val="localPP"/>
+        </comp>
+      </comp>
+    </comp>
+    <!-- /service/TF -->
+    <comp name="TF" id="69" type="sys::Folder"/>
+  </comp>
+  <!-- /play -->
+  <comp name="play" id="7" type="sys::Folder">
+    <prop name="meta" val="34013185"/>
+    <!-- /play/SyncLab -->
+    <comp name="SyncLab" id="12" type="Variable::SyncLabel">
+      <prop name="meta" val="235929601"/>
+    </comp>
+    <!-- /play/SyncLa1 -->
+    <comp name="SyncLa1" id="13" type="Variable::SyncLabel">
+      <prop name="meta" val="941686785"/>
+    </comp>
+    <!-- /play/AliasVa -->
+    <comp name="AliasVa" id="11" type="Variable::AliasVariable">
+      <prop name="meta" val="102957057"/>
+    </comp>
+  </comp>
+</app>
+<links>
+</links>
+</sedonaApp>
