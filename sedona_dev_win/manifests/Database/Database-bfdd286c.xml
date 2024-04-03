@@ -1,0 +1,138 @@
+<?xml version='1.0'?>
+<kitManifest
+   name="Database"
+   checksum="bfdd286c"
+   hasNatives="true"
+   doc="false"
+   isPlay="false"
+   version="0.1.0"
+   vendor="XunGaoAuto"
+   description="ModBus Management"
+   buildHost="DESKTOP-RSVNOMU"
+   buildTime="2024-04-02T15:49:55.630+08:00"
+>
+
+<!-- Dependencies -->
+<depends>
+  <depend on="sys 0.1+"/>
+  <depend on="Variable 0.1+"/>
+  <depend on="inet 0.1+"/>
+</depends>
+
+<!-- Database::MySQLAdapter -->
+<type id="0" name="MySQLAdapter" sizeof="308" base="sys::Component">
+  <facets>
+    <str name="niagaraIcon" val="module://icons/x16/device.png"/>
+  </facets>
+  <slot id="0" name="ipaddr" type="sys::Buf" flags="cs" default="127.0.0.1">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="1" name="port" type="int" flags="c" default="3306">
+    <facets>
+      <int name="min" val="1"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="10000"/>
+    </facets>
+  </slot>
+  <slot id="2" name="username" type="sys::Buf" flags="cs" default="root">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="3" name="password" type="sys::Buf" flags="cs" default="123456">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="4" name="database" type="sys::Buf" flags="cs" default="my_first_db">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="5" name="keyname" type="sys::Buf" flags="cs" default="test_key">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="6" name="keytype" type="int" flags="c" default="1">
+    <facets>
+      <int name="min" val="1"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="250"/>
+    </facets>
+  </slot>
+  <slot id="7" name="present_value" type="float" default="0.0"/>
+  <slot id="8" name="alias" type="sys::Buf" flags="cs" default="">
+    <facets>
+      <bool name="summary" val="true"/>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="64"/>
+    </facets>
+  </slot>
+</type>
+
+<!-- Database::RedisAdapter -->
+<type id="1" name="RedisAdapter" sizeof="236" base="sys::Component">
+  <facets>
+    <str name="niagaraIcon" val="module://icons/x16/device.png"/>
+  </facets>
+  <slot id="0" name="status" type="int" default="1">
+    <facets>
+      <int name="fieldWidth" val="20"/>
+      <str name="range" val="OK, NG, END"/>
+      <bool name="readonly" val="true"/>
+    </facets>
+  </slot>
+  <slot id="1" name="ipaddr" type="sys::Buf" flags="cs" default="192.168.188.46">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="2" name="port" type="int" flags="c" default="6379">
+    <facets>
+      <int name="min" val="1"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="10000"/>
+    </facets>
+  </slot>
+  <slot id="3" name="keyname" type="sys::Buf" flags="cs" default="test_key">
+    <facets>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="20"/>
+    </facets>
+  </slot>
+  <slot id="4" name="keytype" type="int" flags="c" default="1">
+    <facets>
+      <int name="min" val="1"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="250"/>
+    </facets>
+  </slot>
+  <slot id="5" name="present_value" type="float" default="0.0"/>
+  <slot id="6" name="alias" type="sys::Buf" flags="cs" default="">
+    <facets>
+      <bool name="summary" val="true"/>
+      <bool name="asStr" val="true"/>
+      <bool name="config" val="true"/>
+      <int name="max" val="64"/>
+    </facets>
+  </slot>
+</type>
+
+</kitManifest>

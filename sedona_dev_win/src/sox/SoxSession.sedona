@@ -188,13 +188,13 @@ class SoxSession
   bool authenticate(SoxService service, Str username, byte[] digest, int digestOff, int digestLen)
   {                   
     // log.message("digestOff=$digestOff and digestLen=$digestLen")
-    log.message("digest -------")
-    for(int i =digestOff ; i < digestLen + digestOff; i++)
-    {
-        Str s = Sys.hexStr(digest[i]);
-        log.message("$s ")
-    }
-    log.message("-------- digest")
+//    log.message("digest -------")
+//    for(int i =digestOff ; i < digestLen + digestOff; i++)
+//    {
+//        Str s = Sys.hexStr(digest[i]);
+//        log.message("$s ")
+//    }
+//    log.message("-------- digest")
 
   // lookup user by name                     
     user = (User)service.userService?.lookupByName(username)
@@ -208,31 +208,31 @@ class SoxSession
     authTempOut.writeBytes(user.cred.bytes, 0, user.cred.size)
     authTempOut.writeI8(nonce)     
 
-    log.message("user.cred -------")
-    for(int j =0 ; j < user.cred.size; j++)
-    {
-        Str s = Sys.hexStr(user.cred.get(j));
-        log.message("$s ")
-    }
-    log.message("-------- user.cred")
+//    log.message("user.cred -------")
+//    for(int j =0 ; j < user.cred.size; j++)
+//    {
+//        Str s = Sys.hexStr(user.cred.get(j));
+//        log.message("$s ")
+//    }
+//    log.message("-------- user.cred")
 
-    log.message("authTemp -------")
-    for(int j =0 ; j < authTemp.size; j++)
-    {
-        Str s = Sys.hexStr(authTemp.get(j));
-        log.message("$s ")
-    }
-    log.message("-------- authTemp")
+//    log.message("authTemp -------")
+//    for(int j =0 ; j < authTemp.size; j++)
+//    {
+//        Str s = Sys.hexStr(authTemp.get(j));
+//        log.message("$s ")
+//    }
+//    log.message("-------- authTemp")
 
     Crypto.sha1(authTemp.bytes, 0, authTemp.size, authDigest, 0)
     
-    log.message("authDigest -------")
-    for(int k =0 ; k < 20; k++)
-    {
-        Str s = Sys.hexStr(authDigest[k]);
-        log.message("$s ")
-    }
-    log.message("-------- authDigest")
+//    log.message("authDigest -------")
+//    for(int k =0 ; k < 20; k++)
+//    {
+//        Str s = Sys.hexStr(authDigest[k]);
+//        log.message("$s ")
+//    }
+//    log.message("-------- authDigest")
 
    // verify if digests are equal                        
     return Sys.compareBytes(authDigest, 0, digest, digestOff, digestLen) == 0

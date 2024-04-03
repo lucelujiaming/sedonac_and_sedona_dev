@@ -1,0 +1,145 @@
+@niagaraIcon="module://icons/x16/device.png"
+class RedisAdapter
+  extends Component
+{
+  ////////////////////////////////////////////////////////////////
+  // Constants
+  ////////////////////////////////////////////////////////////////
+  define Str REDIS_STATUSRANGE = "OK, NG, END"
+  define int REDIS_STATUSOK = 0
+  define int REDIS_STATUSNG = 1
+  define int REDIS_STATUSEND = 2
+  
+  @readonly
+  @range = REDIS_STATUSRANGE
+  @fieldWidth = 20
+  property int status = REDIS_STATUSNG
+  
+  @config
+  @asStr
+  property Buf(20) ipaddr = "192.168.188.46"
+  
+  @config
+  @min = 1
+  @max = 10000
+  property int port = 6379
+  
+  @config
+  @asStr
+  property Buf(20) keyname = "test_key"
+  
+  @config
+  @min = 1
+  @max = 250
+  property int keytype = 1
+  
+  // 
+  property float present_value = 0.0f
+
+  @summary=true
+  @config
+  @asStr
+  property Buf(64) alias = ""
+  
+  ////////////////////////////////////////////////////////////////
+  // Life cycle
+  ////////////////////////////////////////////////////////////////
+  override void loaded()
+  {
+    ctx = redisOpen(ipaddr.toStr(), port)
+    if(ctx >= 0)
+    {
+        log.message("RedisAdapter::changed mysqlOpen return OK")
+        status := REDIS_STATUSOK
+        log.message("RedisAdapter::changed status == MySQL_STATUSOK")
+    }
+    else
+    {
+        log.message("RedisAdapter::changed mysqlOpen return NG")
+        status := REDIS_STATUSNG
+        log.message("RedisAdapter::changed status == MySQL_STATUSNG")
+    }
+  }
+  override void changed(Slot slot)
+  {
+    super.changed(slot)
+    if (slot == RedisAdapter.ipaddr || slot == RedisAdapter.port) {
+        redisClose(ctx)
+        ctx = redisOpen(ipaddr.toStr(), port)
+        if(ctx >= 0)
+        {
+            log.message("RedisAdapter::changed mysqlOpen return OK")
+            status := REDIS_STATUSOK
+            log.message("RedisAdapter::changed status == MySQL_STATUSOK")
+        }
+        else
+        {
+            log.message("RedisAdapter::changed mysqlOpen return NG")
+            status := REDIS_STATUSNG
+            log.message("RedisAdapter::changed status == MySQL_STATUSNG")
+        }
+    }
+    log.message("MySQLAdapter::changed over")
+  }
+  override void stop()
+  {
+     redisClose(ctx)
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // App support
+  ////////////////////////////////////////////////////////////////
+
+
+  override void execute()
+  {
+    log.message("RedisAdapter::execute status = $status")
+    if (status == REDIS_STATUSOK) {
+      log.message("RedisAdapter::execute status == REDIS_STATUSOK")
+      if(lastInValue != present_value) {
+          log.message("RedisAdapter::execute keyname = ${keyname.toStr()} and present_value = $present_value")
+          buf[0] = present_value
+          redisSetValue(ctx, keyname.toStr(), buf)
+          lastInValue = present_value
+      } 
+    }
+  }
+  
+  int redisOpen(Str ip, int port)
+  {
+     log.message("RedisAdapter::redisOpen port=$port");
+     return dO(ip, port)
+  }
+  int redisClose(int ctx)
+  {
+     log.message("RedisAdapter::redisClose");
+     return dC(ctx)
+  }
+  int  redisSetValue(int ctx, Str name, float[] value)
+  {
+     log.message("RedisAdapter::redisSetValue name=$name")
+     return dS(ctx, name, value)
+  }
+  float redisGetValue(int ctx, Str name)
+  {
+     return dG(ctx, name)
+  }
+  int redisExecute(int ctx, Str strSQL)
+  {
+     return dE(ctx, strSQL)
+  }
+  // define Log log
+  ////////////////////////////////////////////////////////////////
+  // Fields
+  ////////////////////////////////////////////////////////////////
+  
+  private inline float[16] buf
+  private float lastInValue = 0.0
+  private int ctx = -1
+  
+  native int dO(Str ip, int port)
+  native int dC(int ctx)
+  native int dS(int ctx, Str name, float[] value)
+  native float dG(int ctx, Str name)
+  native int dE(int ctx, Str strSQL)
+}

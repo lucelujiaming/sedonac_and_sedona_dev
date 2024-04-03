@@ -1,0 +1,34 @@
+<sedonaKit
+  name="Database"
+  vendor="XunGaoAuto"
+  description="ModBus Management"
+  includeSource="false"
+  doc="false"
+>
+
+  <!-- Dependencies -->
+  <depend on="sys 0.1+" />
+  <depend on="Variable 0.1+" />
+  <depend on="inet 0.1+"/>
+
+  <!-- MySQL Source Directories  -->
+  <source dir="MySQLAdapter.sedona" />
+  <!-- Redis Source Directories  -->
+  <source dir="RedisAdapter.sedona" />
+  
+  <!-- Modbus Natives -->
+  <native qname="Database::MySQLAdapter.dO" id="9::0"/>
+  <native qname="Database::MySQLAdapter.dI" id="9::1"/>
+  <native qname="Database::MySQLAdapter.dD" id="9::2"/>
+  <native qname="Database::MySQLAdapter.dU" id="9::3"/>
+  <native qname="Database::MySQLAdapter.dS" id="9::4"/>
+  <native qname="Database::MySQLAdapter.dE" id="9::5"/>
+  <native qname="Database::MySQLAdapter.dC" id="9::6"/>
+
+  <native qname="Database::RedisAdapter.dO" id="9::7"/>
+  <native qname="Database::RedisAdapter.dG" id="9::8"/>
+  <native qname="Database::RedisAdapter.dS" id="9::9"/>
+  <native qname="Database::RedisAdapter.dE" id="9::10"/>
+  <native qname="Database::RedisAdapter.dC" id="9::11"/>
+  
+</sedonaKit>

@@ -1,0 +1,168 @@
+@niagaraIcon="module://icons/x16/device.png"
+class MySQLAdapter
+  extends Component
+{
+  ////////////////////////////////////////////////////////////////
+  // Constants
+  ////////////////////////////////////////////////////////////////
+  define Str MySQL_STATUSRANGE = "OK, NG, END"
+  define int MySQL_STATUSOK = 0
+  define int MySQL_STATUSNG = 1
+  define int MySQL_STATUSEND = 2
+  
+  @readonly
+  @range = MySQL_STATUSRANGE
+  @fieldWidth = 20
+  property int status = MySQL_STATUSNG
+  
+  @config
+  @asStr
+  property Buf(20) ipaddr = "127.0.0.1"
+  
+  @config
+  @min = 1
+  @max = 10000
+  property int port = 3306
+
+  @config
+  @asStr
+  property Buf(20) username = "root"
+
+  @config
+  @asStr
+  property Buf(20) password = "123456"
+  
+  @config
+  @asStr
+  property Buf(20) database = "my_first_db"
+  
+  @config
+  @asStr
+  property Buf(20) keyname = "test_key"
+  
+  @config
+  @min = 1
+  @max = 250
+  property int keytype = 1
+  
+  // 
+  property float present_value = 0.0f
+
+  @summary=true
+  @config
+  @asStr
+  property Buf(64) alias = ""
+  
+  ////////////////////////////////////////////////////////////////
+  // Life cycle
+  ////////////////////////////////////////////////////////////////
+  override void loaded()
+  {
+    ctx = mysqlOpen(ipaddr.toStr(), port, username.toStr(), password.toStr(), database.toStr())
+    if(ctx >= 0)
+    {
+        log.message("MySQLAdapter::changed mysqlOpen return OK")
+        status := MySQL_STATUSOK
+        log.message("MySQLAdapter::changed status == MySQL_STATUSOK")
+    }
+    else
+    {
+        log.message("MySQLAdapter::changed mysqlOpen return NG")
+        status := MySQL_STATUSNG
+        log.message("MySQLAdapter::changed status == MySQL_STATUSNG")
+    }
+  }
+  override void changed(Slot slot)
+  {
+    super.changed(slot)
+    if (slot == MySQLAdapter.ipaddr || slot == MySQLAdapter.port || 
+        slot == MySQLAdapter.username || slot == MySQLAdapter.password || slot == MySQLAdapter.database) {
+        mysqlClose(ctx)
+        ctx = mysqlOpen(ipaddr.toStr(), port, username.toStr(), password.toStr(), database.toStr())
+        if(ctx >= 0)
+        {
+            log.message("MySQLAdapter::changed mysqlOpen return OK")
+            status := MySQL_STATUSOK
+            log.message("MySQLAdapter::changed status == MySQL_STATUSOK")
+        }
+        else
+        {
+            log.message("MySQLAdapter::changed mysqlOpen return NG")
+            status := MySQL_STATUSNG
+            log.message("MySQLAdapter::changed status == MySQL_STATUSNG")
+        }
+    }
+    log.message("MySQLAdapter::changed over")
+  }
+  override void stop()
+  {
+     mysqlClose(ctx)
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // App support
+  ////////////////////////////////////////////////////////////////
+
+
+  override void execute()
+  {
+    // log.message("MySQLAdapter::execute status = $status")
+    // if (status == MySQL_STATUSOK) {
+      log.message("MySQLAdapter::execute status == MySQL_STATUSOK")
+      if(lastInValue != present_value) {
+          log.message("MySQLAdapter::execute keyname = ${keyname.toStr()} and present_value = $present_value")
+          buf[0] = present_value
+          mysqlInsert(ctx, keyname.toStr(), keytype, buf)
+          lastInValue = present_value
+      } 
+    // }
+  }
+  
+  int mysqlOpen(Str ip, int port, Str username, Str password, Str database)
+  {
+     log.message("MySQLAdapter::mysqlOpen port=$port");
+     return dO(ip, port, username, password, database)
+  }
+  int mysqlClose(int ctx)
+  {
+     log.message("MySQLAdapter::mysqlClose");
+     return dC(ctx)
+  }
+  int  mysqlInsert(int ctx, Str name, int type, float[] value)
+  {
+     log.message("MySQLAdapter::redisSetValue name=$name");
+     return dI(ctx, name, type, value)
+  }
+  int mysqlDelete(int ctx, Str name)
+  {
+     return dD(ctx, name)
+  }
+  int mysqlUpdate(int ctx, Str name, float[] value)
+  {
+     return dU(ctx, name, value)
+  }
+  float mysqlSelect(int ctx, Str name)
+  {
+     return dS(ctx, name)
+  }
+  int mysqlExecute(int ctx, Str strSQL)
+  {
+     return dE(ctx, strSQL)
+  }
+  // define Log log
+  ////////////////////////////////////////////////////////////////
+  // Fields
+  ////////////////////////////////////////////////////////////////
+  
+  private inline float[16] buf
+  private float lastInValue = 0.0
+  private int ctx = -1
+  
+  native int dO(Str ip, int port, Str username, Str password, Str database)
+  native int dC(int ctx)
+  native int dI(int ctx, Str name, int type, float[] value)
+  native int dD(int ctx, Str name)
+  native int dU(int ctx, Str name, float[] value)
+  native float dS(int ctx, Str name)
+  native int dE(int ctx, Str strSQL)
+}
